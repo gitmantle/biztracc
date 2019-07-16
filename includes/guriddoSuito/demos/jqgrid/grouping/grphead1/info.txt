@@ -1,0 +1,11 @@
+Header grouping is a way to add a additional column above the header grid rows, 
+so that they are grouped of desired way.
+
+Grouping of the header should be used after the grid is created. 
+For this purpose we have created a method which is called setGroupHeaders. 
+
+We support two type of grouping - with colSpan enabled and colSpan disabled.
+If the colSpan is disabled (the default) the headers that do not have grouping have a additional cell above it.
+If the colSpan is enabled there is no additional cell above the non-grouped column and it is considered as one column. 
+
+Below is a example with colSpan option set to true

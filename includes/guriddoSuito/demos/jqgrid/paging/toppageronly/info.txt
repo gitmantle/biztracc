@@ -1,0 +1,1 @@
+You can add a top pager only toolbar. Please, refer to the PHP tab for javascript code details.

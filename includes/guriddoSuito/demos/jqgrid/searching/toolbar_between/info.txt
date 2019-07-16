@@ -1,0 +1,3 @@
+In 5.1 release we added a option between in toolbar searching. To activate this it is needed to set in sopt array the word 'bt'.
+
+To search it is needed to separate the values with ... By example the search between values 10248 and 10251 in OrderID it is needed to set 10248...10251 in searched input field.

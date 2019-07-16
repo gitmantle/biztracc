@@ -1,0 +1,56 @@
+body 
+{
+    background: url("../../images/back.jpg"); /*background image*/
+	background-repeat: repeat;
+	padding-top: 65px;
+}
+
+.myBackground {
+  background-color: rgba(255,255,255, 0.4);
+  color: inherit;
+}
+
+.navbar 
+{
+    background-color:#603; /*background of navbar*/
+    border-color: #603;
+}
+
+.navbar .navbar-nav > li > a, .navbar .navbar-brand 
+{
+    color: #fff; /*writing on navbar*/
+}
+
+.jumbotron {
+  padding-top: 2px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  color: inherit;
+  background-color: #eee;
+}
+
+.navbar .navbar-nav > li > a, .navbar .navbar-brand 
+{
+    color: #E3E3E3; /*writing on navbar*/
+}
+
+.navbar .navbar-nav > .active > a, .navbar .navbar-nav > .active > a:hover, .navbar .navbar-nav > .active > a:focus, 
+.navbar .navbar-nav > .open > a, .navbar .navbar-nav > .open > a:hover, .navbar .navbar-nav > .open > a:focus, 
+.navbar .navbar-nav .open .dropdown-menu > li > a:hover, .navbar .navbar-nav .open .dropdown-menu > li > a:focus 
+{
+    background-color: rgb(246, 246, 246); 
+    color: black; 
+}
+
+.navbar .navbar-nav > li > a:hover, 
+.navbar .navbar-header .navbar-brand
+{
+    color: white;
+}
+
+.navbar .navbar-nav > li a:hover
+{
+    background-color: rgb(246, 246, 246);/*selected navbar item background*/
+    color: black;/*selected navbar item text*/
+}
+

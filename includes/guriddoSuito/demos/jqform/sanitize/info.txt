@@ -1,0 +1,4 @@
+We can sanitize the input by the server using the PHP filter_var function.
+The public property serverSanitize should be set to true.
+
+See the PHP code for more details.

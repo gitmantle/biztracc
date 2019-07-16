@@ -1,0 +1,5 @@
+Exporting to Excel is supported via the <b>excel</b> option in the navigator set to true. Click on the button to see how it works.
+Note the formula at the buttom and how dates and numbers are formatted correct.
+Try to filter records and then export it - now we export only the filtered records.
+As of version 4.8 we support creating a true excel 2007 and excel5 files.
+This is achieved with PHP excel class. See the code for all available options

@@ -1,0 +1,1 @@
+With the option uniqueSearchFields set to true it is possible the searched field to appear only once in the search list. 

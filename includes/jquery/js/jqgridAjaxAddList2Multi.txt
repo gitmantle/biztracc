@@ -1,0 +1,247 @@
+
+     function addList2Multi(sWhere)
+     {  
+         var filterCriteria = $("#candlist").jqGrid('getGridParam', 'postData');
+         
+        // add to multiple assign grid via candidateList table 
+        $.get("jqgridAjaxAddList2Multi.php", {filterCriteria: filterCriteria}, function(data) {
+            $("#multiassignlist").trigger("reloadGrid")
+        });
+     }
+
+
+
+
+
+
+
+<?php 
+   require_once("../includes/startRequest.php");
+   require_once("../appincludes/beforeProcessRequest.php");
+
+   $filterCriteria = $_REQUEST['filterCriteria']; 
+   $iCandidateListID =  $_SESSION['s_CandidateListID'];
+   $iOrganisationID = $g_CurrentOrganisation->m_OrganisationID; 
+   
+   /*
+   { oper:'eq', text:'equal'}, 
+   { oper:'ne', text:'not equal'}, 
+   { oper:'lt', text:'less'},
+   { oper:'le', text:'less or equal'},
+   { oper:'gt', text:'greater'},
+   { oper:'ge', text:'greater or equal'},
+   { oper:'bw', text:'begins with'},
+   { oper:'bn', text:'does not begin with'},
+   { oper:'in', text:'is in'},
+   { oper:'ni', text:'is not in'},
+   { oper:'ew', text:'ends with'},
+   { oper:'en', text:'does not end with'},
+   { oper:'cn', text:'contains'},
+   { oper:'nc', text:'does not contain'},
+   { oper:'nu', text:'is null'},
+   { oper:'nn', text:'is not null'}, 
+   {oper:'bt', text:'between'}],
+   */ 
+   
+   // sort out user access level 
+    $objDivision=&$g_CurrentUser->get_Division();
+    if($objDivision)
+    {
+        $iDivisionID = $objDivision->GetID();
+    }
+    $objDepartment=&$g_CurrentUser->get_Department();
+    if($objDepartment)
+    {
+        $iDepartmentID = $objDepartment->GetID();
+    } 
+    $iAccessLevel = $g_CurrentUser->m_AccessLevelID;
+    $iUserID = $g_CurrentUser->GetID();
+    switch ($iAccessLevel)
+    {
+       case 30:
+            // division admin
+            $sWhereAccess=" and candidate.DivisionID = ".$iDivisionID;
+            break; 
+       case 40:
+            //department admin
+            $sWhereAccess=" and candidate.DepartmentID = ".$iDepartmentID;
+            break; 
+       case 50:
+            // user
+            $sWhereAccess=" and candidate.CreatedByUserID = ".$iUserID;
+            break;
+       default: 
+            $sWhereAccess="";           
+    }     
+      
+   
+   $where = " where IsTemplate = 0 and OrganisationID = ".$iOrganisationID;
+   $sFilter = $filterCriteria['filters']; 
+   $output = json_decode($sFilter,true); 
+   $sOperation = $output["groupOp"];
+   $rules=$output["rules"];
+   foreach($rules as $val)   
+   {  
+       $item = $val["field"];
+       if($item != "ImportRef" && $item != "Grouping" && $item != "Notes")
+       {
+           $criteria = $val["data"];
+           $op = $val["op"];
+           $where .= " {$sOperation} ".$item;
+           switch ($op)
+           {
+                case "eq":
+                    $where .= " = '".$criteria."'";
+                    break;
+                case "ne":
+                    $where .= " != '".$criteria."'";
+                    break;    
+                case "bw":
+                    $where .= " like '".$criteria."%'";
+                    break;    
+                case "bn":
+                    $where .= " not like '".$criteria."%'";
+                    break;    
+                case "ew":
+                    $where .= " like '%".$criteria."'";
+                    break;    
+                case "en":
+                    $where .= " not like '%".$criteria."'";
+                    break;    
+                case "cn":
+                    $where .= " like '%".$criteria."%'";
+                    break;    
+                case "nc":
+                    $where .= " not like '%".$criteria."%'";
+                    break;
+                case "nu":
+                    $where .= " is null";
+                    break;
+                case "nn":
+                    $where .= " is not null";
+                    break;
+                case "in":
+                    $where .= " in ('".$criteria."')";
+                    break;
+                case "ni":
+                    $where .= " not in ('".$criteria."')";
+                    break;                        
+           }
+       }
+       else
+       {
+           if ($item == "ImportRef")
+           {
+               $ImpRef = $val["data"];
+               $op = $val["op"];
+               switch ($op)
+               {
+                    case "eq":
+                    $sSQL = "select distinct candidateimport.CandidateID from candidateimport where candidateimport.ImportRef = '".$ImpRef."'";
+                    break;
+                    case "cn":
+                    $sSQL = "select distinct candidateimport.CandidateID from candidateimport where candidateimport.ImportRef like '%".$ImpRef."%'";
+                    break;
+               } 
+               $result=db_query($sSQL); 
+               $numRows = db_num_rows($result);               
+               if($result && $numRows > 0)
+               {  
+                    $where .= " {$sOperation} CandidateID in (";
+                    foreach ($result as $param)
+                    {   
+                        $where .= $param["CandidateID"].",";
+                    } 
+               }
+               $where = rtrim($where,',');
+               $where .= ")";
+           }
+           
+           if ($item == "Grouping")
+           {
+               $grp = $val["data"];
+               $sSQL = "select distinct candidateimport.CandidateID from candidateimport where candidateimport.Grouping = '".$grp."'";
+               $result=db_query($sSQL); 
+               $numRows = db_num_rows($result);               
+               if($result && $numRows > 0)
+               {  
+                    $where .= " {$sOperation} CandidateID in (";
+                    foreach ($result as $param)
+                    {  
+                        $where .= $param["CandidateID"].",";
+                    } 
+               }
+               $where = rtrim($where,',');
+               $where .= ")";
+           }
+           
+           if ($item == "Notes")
+           {
+               $note = $val["data"];
+               $op = $val["op"];
+               switch ($op)
+               {
+                   case "cn":
+                   $sSQL = "select distinct candidate.CandidateID from candidate where candidate.Notes like '%".$note."%'";
+                   break;
+                   case "nc":
+                   $sSQL = "select distinct candidate.CandidateID from candidate where candidate.Notes not like '%".$note."%'";
+                   break;
+               } 
+               $result=db_query($sSQL); 
+               $numRows = db_num_rows($result);               
+               if($result && $numRows > 0)
+               {  
+                    $where .= " {$sOperation} CandidateID in (";
+                    foreach ($result as $param)
+                    {  
+                        $where .= $param["CandidateID"].",";
+                    } 
+               }
+               $where = rtrim($where,',');
+               $where .= ")";
+           }
+       }    
+   }
+  
+   $sSQL = "select candidate.CandidateID from candidate {$where} {$sWhereAccess}";
+   $result=db_query($sSQL);
+   if($result)
+   {    
+        foreach ($result as $val)
+        {  
+           $cid = $val["CandidateID"];
+           // check this candidate is not already in the multi assign list
+           $sSQL = "select candidatelistcandidate.CandidateListCandidateID from candidatelistcandidate where candidatelistcandidate.CandidateID = ".$cid." and candidatelistcandidate.CandidateListID = ".$iCandidateListID; 
+           $result=db_query($sSQL); 
+           $numRows = db_num_rows($result);
+           if($numRows > 0)     // duplicate
+           {   
+                // skip this record
+           }
+           else
+           {   
+               $iOrganisationID = $g_CurrentOrganisation->m_OrganisationID;
+               $iDepartmentID = $g_CurrentUser->m_DepartmentID;
+               $now = date("Y-m-d H:i:s");
+               if ($iCandidateListID == 0)
+               {
+                   // add record to CandidateList and return id of entry
+                   $newID = db_query("insert into candidatelist (OrganisationID,DepartmentID,Name,IsTemp,CreatedAt,ModifiedAt) values (:iOrganisationID,:iDepartmentID,'Untitled List',1,:now,:now2)",array(':iOrganisationID'=>$iOrganisationID,':iDepartmentID'=>$iDepartmentID,':now'=>$now,':now2'=>$now));
+                   
+                   $iCandidateListID = $newID;
+                   $_SESSION['s_CandidateListID'] = $newID;
+                   
+                   // add record to CandidateListCandidate
+                   db_query("insert into candidatelistcandidate (CandidateListID,CandidateID,OrganisationID) values (:candlistid,:cid,:OrganisationID)",array(':candlistid'=>$iCandidateListID,':cid'=>$cid,'OrganisationID'=>$iOrganisationID));
+               }
+               else
+               {
+                   // add record to CandidateListCandidate
+                   db_query("insert into candidatelistcandidate (CandidateListID,CandidateID,OrganisationID) values (:candlistid,:cid,:OrganisationID)",array(':candlistid'=>$iCandidateListID,':cid'=>$cid,'OrganisationID'=>$iOrganisationID));
+               }    
+           }
+        }
+   } 
+   
+?>

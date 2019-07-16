@@ -1,0 +1,4 @@
+ In some cases in inline or form edit we need not to call every time tha data for the select that comes from the server. In order to reduce the server calls we can cache the data and use it after another calls.
+
+To do this a chacheUrlData options should be set to true in editoptions
+check the PHP tab for details 

@@ -1,0 +1,2 @@
+We export the summary rows set with the summaryrows options.
+Try to filter records and then export it - now we export only the filtered records.

@@ -1,0 +1,2 @@
+We can determine the operation at client side.
+Note that in this example we use the new event system binding

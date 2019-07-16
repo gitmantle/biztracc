@@ -1,0 +1,2142 @@
+<?php
+
+// Test to allow sync PHP calls  CBG: <<---- If we don't do this session locking by PHP means calls are queued.
+session_write_close();
+
+require_once("report_licence_usage_helpers.php");     
+$cOrganisationClass=&LoadableClass("COrganisation");
+
+$start = microtime(true);  
+
+ini_set("memory_limit","2048M");
+if(!isset($OrganisationID))
+    $OrganisationID="";
+if(!isset($OrganisationName))
+    $OrganisationName="";
+if(!isset($LookBackMonths))
+    $LookBackMonths=12;
+if(!isset($IncludeExpired))
+    $IncludeExpired=false;
+if(!isset($IncludeInActive))
+    $IncludeInActive=false;
+if(!isset($IncludeDemos))
+    $IncludeDemos=false;
+if(!isset($cb_ID))  
+    $cb_ID=true;
+if(!isset($cb_Active))
+    $cb_Active=true; 
+    
+    
+    send_to_log('organisation '.$cb_OrganisationName);
+    
+    
+    
+if(!isset($cb_OrganisationName))
+{
+    send_to_log(' organistaion is not set');
+
+    $cb_OrganisationName=true;
+} else {
+
+    send_to_log(' organistaion is set');
+}    
+    
+    
+    
+    
+    
+if(!isset($cb_OrganisationNotes))
+    $cb_OrganisationNotes=false;
+if(!isset($cb_OrganisationLicenceNotes))
+    $cb_OrganisationLicenceNotes=true;
+if(!isset($cb_UserCount))
+    $cb_UserCount=true;
+if(!isset($cb_Branded))
+    $cb_Branded=true;
+if(!isset($cb_CYOLicence))
+    $cb_CYOLicence=true;
+if(!isset($cb_UsesDvisions))
+    $cb_UsesDvisions=true;
+if(!isset($cb_UsesDepartments))
+    $cb_UsesDepartments=true;
+if(!isset($cb_Credits))
+    $cb_Credits=true;
+//        if(!isset($cb_LicenceStarts))
+//            $cb_LicenceStarts=true;
+//        if(!isset($cb_LicenceEnds))
+//            $cb_LicenceEnds=true;
+if(!isset($cb_MonthsIntoLicence))
+    $cb_MonthsIntoLicence=true;
+if(!isset($cb_Monthsleft))
+    $cb_Monthsleft=true;
+if(!isset($cb_AccountDirector))
+    $cb_AccountDirector=true;
+if(!isset($cb_Lastlogin))
+    $cb_Lastlogin=true;
+if(!isset($cb_LastlogInUser))
+    $cb_LastlogInUser=true;
+//       if(!isset($cb_OrganisationType))
+//            $cb_OrganisationType=true;
+if(!isset($cb_UserCount))
+    $cb_UserCount=true;
+if(!isset($cb_OrganisationIndustry))
+    $cb_OrganisationIndustry=true;
+if(!isset($cb_Type))
+    $cb_Type=true;
+if(!isset($cb_ContactName))
+    $cb_ContactName=true;
+if(!isset($cb_ContactNum))
+    $cb_ContactNum=true;
+if(!isset($cb_Address))
+    $cb_Address=true;
+if(!isset($cb_Email))
+    $cb_Email=true;
+if(!isset($cb_Area))
+    $cb_Area=true;
+if(!isset($cb_LicenceStart))
+    $cb_LicenceStart=false;
+if(!isset($cb_LicenceEnd))
+    $cb_LicenceEnd=false;
+if(!isset($cb_OrganisationType))
+    $cb_OrganisationType=true;
+if(!isset($cb_createdAt))
+    $cb_createdAt=true;
+if(!isset($cb_monthbymonth))         
+    $cb_monthbymonth=true;
+if(!isset($LicenceTypeID))
+    $LicenceTypeID=0;
+if(!isset($ParentOrganisationID))
+    $ParentOrganisationID=0;
+if(!isset($StartYear))      
+    $StartYear=2009;
+if(!isset($FilterWebServiceID))
+    $FilterWebServiceID=0;
+    
+        
+    send_to_log('organisation '.$cb_OrganisationName);
+    
+   
+    
+if(!isset($cb_ParentOrganisation))
+{
+    send_to_log(' parent organistaion is not set');
+
+    $cb_ParentOrganisation=true;
+} else {
+
+    send_to_log(' parent organistaion is set');
+}      
+    
+if(!isset($cb_WebServices))         
+    $cb_WebServices=true;
+if(!isset($IncludeActive))
+    $IncludeActive = true;
+if(!isset($cb_lookbackperiod))
+    $cb_lookbackperiod = false;
+if(!isset($cb_LicecencePeriod))
+    $cb_LicecencePeriod = true;
+if(!isset($cb_topFiveTests))
+    $cb_topFiveTests = false;
+if(!isset($cb_SelectedRangeAssignments))
+    $cb_SelectedRangeAssignments = true;
+if(!isset($cb_LifetimeAssignments))
+    $cb_LifetimeAssignments = true;
+
+$aOptions=array();
+for($iYear=2009;$iYear<=intval(date("Y"));$iYear++)
+    $aOptions[$iYear]=$iYear;
+$serviceOptions = listWebServices();    
+
+if(isset($filename))
+{   
+    $file=$sCache.$filename;
+    $sTxtFile=str_replace("xlsx","txt",$file);        
+}
+
+// Check tracking file
+if(file_exists($sTxtFile))
+{
+    $contents=file_get_contents($sTxtFile);        
+    if($contents!=null)
+    {
+        list($status,$record,$records,$time) = explode(":",$contents);
+        $aJSON=(array("status"=>$status,"filename"=>$filename,"record"=>$record,"records"=>$records,"time"=>$time));
+    }
+    else 
+    {
+        $aJSON=array("status"=>"waiting");
+    }
+    $sJsonEncoded=json_encode($aJSON);        
+    echo($sJsonEncoded);
+    exit;
+}
+// Fallback, check for excel file
+else if(file_exists($file))
+{
+    $aJSON=(array("status"=>"done","filename"=>$filename,"record"=>"0","records"=>"0","time"=>"0"));
+    $sJsonEncoded=json_encode($aJSON);        
+    echo($sJsonEncoded);        
+    exit;
+}
+// Allow script to run
+else
+{
+    // Force response to Ajax call then continue        
+    ignore_user_abort(true);
+    $content = (json_encode(array("status"=>"waiting","filename"=>$filename)));
+    $len = strlen($content);             // Get the length
+    header('Connection: close');         // Tell the client to close connection
+    header("Content-Length: $len");      // Close connection after $len characters
+    echo $content;                       // Output content
+    flush();    
+}
+
+// Tracking file
+file_put_contents($sTxtFile,"working:0:0:0");
+
+show_boxpage("BoxBaseInternal","width:98%"); 
+
+$Like="";
+if(!strlen($OrganisationID))
+    $OrganisationID=0;
+if(!$OrganisationID||strlen($OrganisationName))
+    $Like="%";    
+$FilterExpired="";
+if(!$IncludeExpired)    
+    $FilterExpired="And Date(organisation.LicenceEndDate) >= CurDate()";        
+$FilterDemos="";
+if(!$IncludeDemos)
+    $FilterDemos="organisation.DemoAccount = 0 And";
+$FilterInActive="";
+if($IncludeInActive&&$IncludeActive)
+    $FilterInActive="";
+elseif($IncludeActive)    
+    $FilterInActive="organisation.Active = 1 And";
+elseif($IncludeInActive)
+    $FilterInActive="organisation.Active = 0 AND";
+else
+    $FilterInActive="organisation.Active = null AND";
+if($FilterWebServiceID != 0)
+    $FilterWebService = " organisation.WebServiceID = " . $FilterWebServiceID . "  AND";
+else 
+    $FilterWebService = "";
+$FilterLicenceType="";
+if($LicenceTypeID>0)
+    $FilterLicenceType="organisation.LicenceTypeID = $LicenceTypeID And";
+$FilterParentOrgs="";
+if($g_CurrentUser->IsPartner()&&$g_CurrentUser->m_PartnerOrganisationID)
+    $FilterParentOrgs= " AND (Organisation.ParentOrganisationID={$g_CurrentUser->m_PartnerOrganisationID} OR Organisation.OrganisationID={$g_CurrentUser->m_PartnerOrganisationID})";
+else if($ParentOrganisationID>0)
+    $FilterParentOrgs=" AND (Organisation.ParentOrganisationID={$ParentOrganisationID} OR Organisation.OrganisationID={$ParentOrganisationID})";
+    if(($ParentOrganisationID||$FilterWebServiceID)&&!strlen($Like))
+    $Like="%";
+
+// #1 SQL
+$sSQL = <<<SQL
+ 
+SELECT 
+  Organisation.OrganisationID AS OrganisationID, Organisation.Name AS Organisation,
+  Year(TestAssignment.CreatedAt) AS Year,
+  Month(TestAssignment.CreatedAt) AS Month,
+  Concat(Year(TestAssignment.CreatedAt), '-', Month(TestAssignment.CreatedAt)) AS 'Year-Month',
+  Count(TestAssignment.TestAssignmentID) AS Assignments  
+FROM    
+  Organisation LEFT OUTER JOIN TestAssignment ON Organisation.OrganisationID = TestAssignment.OrganisationID 
+  LEFT JOIN Candidate ON Candidate.CandidateID = Testassignment.CandidateID 
+  Where             
+  $FilterDemos 
+  $FilterInActive 
+  $FilterLicenceType 
+  $FilterWebService   
+  (TestAssignment.OrganisationID = $OrganisationID OR Organisation.Name Like '$OrganisationName$Like') AND (Candidate.IsTemplate=0) 
+  $FilterParentOrgs 
+  $FilterExpired 
+Group By
+  Organisation.OrganisationID, 
+  Organisation.Name,  
+  Year(TestAssignment.CreatedAt), 
+  Month(TestAssignment.CreatedAt),
+  'Year-Month' 
+ORDER BY 
+  Organisation,
+  Year(TestAssignment.CreatedAt),
+  Month(TestAssignment.CreatedAt);
+SQL;
+
+$iTimeOut=0;
+$pdoStatement=db_query("SELECT COUNT(*) as HowMany FROM Organisation  WHERE {$FilterDemos} {$FilterInActive} {$FilterLicenceType} {$FilterWebService} Organisation.Name Like '{$OrganisationName}{$Like}' ");
+if($pdoStatement&&$myrow=db_fetch_array($pdoStatement))
+    $iTimeOut=$myrow["HowMany"];
+
+
+$htmlContent="";
+if($cb_topFiveTests == true)
+    $topFive = topFiveRunTests();
+if($ReportID) 
+    $htmlContent.=($ReportID);
+
+$iProcessing=0;
+$iProcessingCount=0;
+
+$pdoStatement=db_query($sSQL);
+if($pdoStatement)
+{
+    $bAlternate = false;
+    $iOrganisation=-1;
+    $iOutputRow=1;
+    $iRow=1;
+    $i=0;
+    $iStartYear=$StartYear;    
+    $iWebService=$FilterWebServiceID;
+    $iEndYear=intval(date("Y")+1);
+    $iEndMonth=intval(date("n"));
+    $iFairUsagePecentage=10;
+    $iInLast=$LookBackMonths;  // Months
+    $iCalcsStartMonth=date("n",strtotime("-".($iInLast-1)." Months"));
+    $iCalcsStartYear=date("Y",strtotime("-".($iInLast-1)." Months"));
+    $tCalcsStart=mktime(0,0,0,$iCalcsStartMonth,1,$iCalcsStartYear);  // +1 to start month or we count 13 eg Dec - Dec inclusive = 13 Months (We want Jan - Dec = 12 months)
+    $aResults=array();
+    $aMonths=array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+
+
+    //Adjust page timeout, removed for now as new faster page should not need this.
+    $iTimeOut=($iTimeOut*1.5);
+    ini_set('max_execution_time', $iTimeOut);
+    set_time_limit($iTimeOut);
+
+    // Are we exporting, if so generate a filename
+    //
+    $iExcelRow=2;
+    $iExcelCol=0;
+    $iExcelColLM=0;
+    $iExcelColLU=0;
+    $iExcelColLB=0;
+    
+    // Build description for file
+    $sFileDescription="";
+    $sFileDescription.="Licence Usage Export.\n\n";
+    $sFileDescription.="OrganisationID: $OrganisationID\n";
+    $sFileDescription.="OrganisationName: $OrganisationName\n";
+    $sFileDescription.="LookBackMonths: $LookBackMonths\n";
+    $sFileDescription.="IncludeExpired: $IncludeExpired\n";
+    $sFileDescription.="IncludeInActive: $IncludeInActive\n";
+    $sFileDescription.="IncludeDemos: $IncludeDemos\n";
+    $sFileDescription.="LicenceTypeID : $LicenceTypeID\n";
+    $sFileDescription.="StartYear: $StartYear\n";
+    /**
+    * The intention with AdvancedValueBinder.php is that it behaves like Microsoft Office Excel, automatically setting number formats for you, recognizing dates, times, percentages etc.
+    */
+    PHPExcel_Cell::setValueBinder( new PHPExcel_Cell_AdvancedValueBinder() );
+    // Create new PHPExcel object  
+    $objPHPExcel = new PHPExcel();
+    // Set properties
+    $objPHPExcel->getProperties()->setCreator($g_CurrentOrganisation->get_ParentOrganisationDisplayName());
+    $objPHPExcel->getProperties()->setLastModifiedBy($g_CurrentOrganisation->get_ParentOrganisationDisplayName());
+    $objPHPExcel->getProperties()->setTitle("Licence Usage");
+    $objPHPExcel->getProperties()->setSubject("Licence Usage");
+    $objPHPExcel->getProperties()->setDescription($sFileDescription);
+    $objPHPExcel->getProperties()->setKeywords("");
+    $objPHPExcel->getProperties()->setCategory("");
+    // Set active sheet
+    $objPHPExcel->setActiveSheetIndex(0);
+    // Get active sheet to work with
+    $objPHPExcelAS = $objPHPExcel->getActiveSheet(); 
+    // Rename sheet
+    $objPHPExcelAS->setTitle('Organisation Details');
+    
+    // create Licence by Month sheet 
+    $objPHPExcelLM=$objPHPExcel->createSheet(); 
+    $objPHPExcelLM->setTitle('Licences by Month');
+    
+    // create Licence Usage sheet 
+    $objPHPExcelLU=$objPHPExcel->createSheet(); 
+    $objPHPExcelLU->setTitle('Licences Usage');
+    
+    // create Looking Back sheet 
+    $objPHPExcelLB=$objPHPExcel->createSheet(); 
+    $objPHPExcelLB->setTitle('Looking Back'); 
+    
+    // create Jason's sheet 
+    $objPHPExcelJS=$objPHPExcel->createSheet(); 
+    // Rename 2nd sheet
+    $objPHPExcelJS->setTitle('Raw'); 
+    $objPHPExcelJS->setCellValueByColumnAndRow(0, 2, "ID");
+    $objPHPExcelJS->setCellValueByColumnAndRow(1, 2, "Active");
+    $objPHPExcelJS->setCellValueByColumnAndRow(2, 2, "Name");
+    $objPHPExcelJS->setCellValueByColumnAndRow(3, 2, "Type");
+    $objPHPExcelJS->setCellValueByColumnAndRow(4, 2, "Parent Organisation");
+    $objPHPExcelJS->setCellValueByColumnAndRow(5, 2, "Web Services");
+    $objPHPExcelJS->setCellValueByColumnAndRow(6, 2, "Credits");
+    $objPHPExcelJS->setCellValueByColumnAndRow(7, 2, "Licence Start");
+    $objPHPExcelJS->setCellValueByColumnAndRow(8, 2, "Licence ends");
+    $objPHPExcelJS->setCellValueByColumnAndRow(9, 2, "Allocated Usage");
+    $objPHPExcelJS->setCellValueByColumnAndRow(10, 2, "# Assignments");
+    $objPHPExcelJS->setCellValueByColumnAndRow(11, 2, "Monthly Average");
+    $objPHPExcelJS->setCellValueByColumnAndRow(12, 2, "% Of Allocation Used");
+    $objPHPExcelJS->setCellValueByColumnAndRow(9, 1, "Licence Period To Date");
+    $objPHPExcelJS->mergeCells('J1:M1');
+    $style = array(
+        'alignment' => array(
+            'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+        )
+    );
+    $objPHPExcelJS->getStyle("J1:M1")->applyFromArray($style); 
+    $iExcelColJ=0;
+    
+    // Construct our filename
+    // $file = $sCache . "/excel/$r_sAction"."-".date("d_m_Y_H_i_s").".xlsx";
+    $htmlContent .=  "<p><a href=\"$file\" target=\"_blank\">Download Excel Export</a></p>";
+    //      $sStart=excel_cell($iStartCol, $iExcelRow-1);
+    //     $sEnd=excel_cell($iExcelCol-1,$iExcelRow);
+    //    $objPHPExcelAS->duplicateStyleArray($aStyle,"$sStart:$sEnd");
+
+    // Collate all data for processing
+    // #2 collate
+    while($myrow=db_fetch_array($pdoStatement))
+    {                   
+        if($iOrganisation!=$myrow['OrganisationID'])
+        {
+            $iOrganisation=intval($myrow['OrganisationID']);
+            $aResults[$iOrganisation]=array();
+
+            // Load the actual organisation
+            $aResults[$iOrganisation]=$cOrganisationClass->GetByID($iOrganisation);                    
+            // Set members for things needed/not in db table (yet or to be calculated)
+            // All org users order so last loggedin is first
+            $aResults[$iOrganisation]->m_Users=&$aResults[$iOrganisation]->LoadOwned("CUser",array("sOrderBy"=>"ModifiedAt DESC"));
+            if(count($aResults[$iOrganisation]->m_Users))
+                $aResults[$iOrganisation]->m_LastLoginUser=$aResults[$iOrganisation]->m_Users[0];
+            // Load Primary contact user and Account admin... loads into: m_PrimaryContactUser and m_AccountDirectorUser
+            $aResults[$iOrganisation]->LoadDetail();   
+        }
+        if(isset($aResults[$iOrganisation]))
+        {
+            if(!isset($aResults[$iOrganisation]->m_ByMonth))
+                $aResults[$iOrganisation]->m_ByMonth=array();
+            $aResults[$iOrganisation]->m_ByMonth[$myrow['Year-Month']]=$myrow['Assignments'];
+        }                    
+    }
+
+    // Process data   
+    $RanOutOfCredits=0;
+
+    // Styling
+    $Excel_white=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'ffffff'));
+    $Excel_Blue=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'66a7e2'));
+    $Excel_LightBlue=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'cfe6fc'));
+    $Excel_Red=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'f8776d'));
+    $Excel_black=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'040000'));                               
+    $Excel_Orange=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'fdce7e'));                               
+    $Excel_Green=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'bfd981'));
+    $Excel_LightGreen=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'bfd000'));                               
+    $Excel_LightOrange=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'f7e1a5'));
+    $Excel_Yellow=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'fffae0')); 
+    $Excel_35=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'daeef3')); 
+    $Excel_50=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'ebf1de')); 
+    $Excel_Less75=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'fde9d9')); 
+    $Excel_More75=array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'startcolor'=>array('rgb'=>'f2dcdb'));     
+    $aStyle=array('fill'=>array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'fffae0')),'borders'=>array('bottom'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'top'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'right'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0));
+    $aStylelightgreen=array('fill'=>array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'85fd8b')),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0)); 
+    $BStyle=array('fill'=>array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'fffae0')),'borders'=>array('outline'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN)));     
+    $aStyleBlue=array('fill'=>array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'cfe6fc')),'borders'=>array('top'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'right'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0));
+    $aFuntions = Array();     
+    $aPhpNames = Array();
+    $aPhpContent = Array();    
+    $iExcelRow=3;
+    $iExcelHeaderRow=2;
+    $iExcelCol=0;
+    $iExcelHeadCol=0;
+    $iExcelHeadColLM=0;
+    $iExcelHeadColLU=0;
+    $iExcelHeadColLB=0;
+    $bAddHeader=true;
+
+    // Start tracking
+    $iProcessing=1;
+    $iProcessingCount=count($aResults);
+
+    foreach($aResults as $objOrganisation)  
+    {      
+        $time=number_format((microtime(true)-$start),2);
+        file_put_contents($sTxtFile,"working:{$iProcessing}:{$iProcessingCount}:{$time}");
+        $iProcessing++;            
+
+        // 1st of month calcs
+        $iLicenceFullMonths=months_between($objOrganisation->m_LicenceStartDate,false,true);
+
+        // Licence period (date to date) calcs
+        $iLicenceMonths=months_between($objOrganisation->m_LicenceStartDate);
+        $iLicencePeriodMonths=months_between($objOrganisation->m_LicenceStartDate,$objOrganisation->m_LicenceEndDate);
+        if($iLicenceMonths>$iLicencePeriodMonths)
+            $iLicenceMonths=$iLicencePeriodMonths;
+
+        // Months left in period (could be negative)
+        $iMonthsRemaining=$iLicencePeriodMonths-$iLicenceMonths;
+
+        if(isset($objOrganisation->m_ByMonth))
+        {
+            // Process months by year
+            $iYear=$iStartYear;
+            $objOrganisation->m_LastX_UsedMonths=0;
+            $objOrganisation->m_LastX_AssignmentsTotal=0;
+            $objOrganisation->m_Licence_AssignmentsTotal = array_sum($objOrganisation->m_ByMonth);     
+
+            while($iYear<=$iEndYear)
+            {
+                for($iMonth=1;$iMonth<=12;$iMonth++)
+                {   
+                    if(isset($objOrganisation->m_ByMonth[($iYear."-".$iMonth)]))
+                    {                                   
+                        $tProcesing=mktime(0,0,0,$iMonth,1,$iYear);
+                        if($tProcesing>=$tCalcsStart)
+                        {   
+                            $objOrganisation->m_LastX_UsedMonths++;
+                            $objOrganisation->m_LastX_AssignmentsTotal+=intval($objOrganisation->m_ByMonth[($iYear."-".$iMonth)]);
+                        }                                
+                    }                            
+                }
+                $iYear++;
+            }    
+            $iYear=$iStartYear;
+            $objOrganisation->m_Licence_AssignmentsRange=0;                       
+            $objOrganisation->PerMonthsUsed=rluPerMonthLoop1($objOrganisation,$iStartYear,$iEndYear);                    
+            while($iYear<=$iEndYear)
+            {          
+                for($iMonth=1;$iMonth<=$iLicencePeriodMonths;$iMonth++)
+                {                         
+                    if(isset($objOrganisation->m_ByMonth[($iYear."-".$iMonth)]))
+                    {                                   
+                        $tProcesing=mktime(0,0,0,$iMonth,1,$iYear);
+                        if($tProcesing>=$iLicenceMonths)
+                            $objOrganisation->m_Licence_AssignmentsRange+=intval($objOrganisation->m_ByMonth[($iYear."-".$iMonth)]);
+                    }                            
+                }                 
+                $iYear++;
+            }
+        }
+        $objOrganisation->m_LastX_PercentageUsage=round(($objOrganisation->m_LastX_UsedMonths/$iInLast)*100);
+        $objOrganisation->m_LastX_AssignmentsAvg=round($objOrganisation->m_LastX_AssignmentsTotal/$iInLast);
+        $objOrganisation->m_ActualUsage=1;
+        if($objOrganisation->m_LastX_UsedMonths>0)
+        {
+            $objOrganisation->m_ActualUsage=round($objOrganisation->m_LastX_AssignmentsTotal/$objOrganisation->m_LastX_UsedMonths);
+        }        
+        if($objOrganisation->m_EstimatedUsageAmount==0||$objOrganisation->m_EstimatedUsageAmount== null||$objOrganisation->m_EstimatedUsageAmount== ""){
+            $objOrganisation->m_EstimatedUsageAmount=1;
+        }
+        if($objOrganisation->m_FairUsageAmount==0||$objOrganisation->m_FairUsageAmount== null||$objOrganisation->m_FairUsageAmount== ""){
+            $objOrganisation->m_FairUsageAmount=1;
+        }
+        if($objOrganisation->m_Licence_AssignmentsRange==0||$objOrganisation->m_Licence_AssignmentsRange== null||$objOrganisation->m_Licence_AssignmentsRange== ""){
+            $objOrganisation->m_Licence_AssignmentsRange=1;
+        }
+        //Calculations using month values
+        $ilastmonthMinusValue = count($objOrganisation->PerMonthsUsed)-(12-$iEndMonth+2);
+        $iLastmonth = $objOrganisation->PerMonthsUsed[$ilastmonthMinusValue ];
+        $objOrganisation->m_TotalEverUSed = $objOrganisation->m_Licence_AssignmentsRange; 
+        $objOrganisation->m_TotalEverUSedComplete = $objOrganisation->m_Licence_AssignmentsTotal;      
+        $aUsedInCurrentLicence=array_slice($objOrganisation->PerMonthsUsed,(($iLicenceMonths-$iLicenceMonths-$iLicenceMonths)-1),$iLicenceMonths);
+        $iSUM_UsedInCurrentLicence=array_sum($aUsedInCurrentLicence);
+        $objOrganisation->m_Licence_AssignmentsRange = $iSUM_UsedInCurrentLicence;                
+        if ($iLicenceMonths){
+            $objOrganisation->m_ForecastUsage= round(($objOrganisation->m_Licence_AssignmentsRange/$iLicenceMonths)*$iLicencePeriodMonths);                
+        }
+        else{
+            $objOrganisation->m_ForecastUsage = "";
+        }
+        $objOrganisation->m_EsimatedUsage= $objOrganisation->m_EstimatedUsageAmount;          
+        $b = $objOrganisation->m_ResourcePath;
+        if ($objOrganisation->m_ResourcePath==NULL){
+            $objOrganisation->m_ResourcePath=" ";
+        }
+        $objOrganisation->m_FairUsageDiffence= round($objOrganisation->m_Licence_AssignmentsRange-$objOrganisation->m_FairUsageAmount);                
+        $objOrganisation->m_FairUsageDiffencePercent= round($objOrganisation->m_Licence_AssignmentsRange/$objOrganisation->m_FairUsageAmount*100-100);                
+
+        $objOrganisation->m_percentOfUsageEstimate=0;
+        if($objOrganisation->m_EsimatedUsage!=0){
+            $objOrganisation->m_percentOfUsageEstimate=round(($objOrganisation->m_LastX_AssignmentsTotal/$objOrganisation->m_EstimatedUsageAmount)*100)."%" ;  
+        }
+        if($objOrganisation->m_LicenceTypeID==1)    //lICENCE            
+            $sFontColour = "60497a";            
+        if($objOrganisation->m_LicenceTypeID==2)    //CREDITS            
+            $sFontColour = "974706";
+
+        $id=$objOrganisation->m_OrganisationID;
+        if($cb_ID){            
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "ID"); 
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "ID"); 
+                    $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "ID");
+                    $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "ID");
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Direct From System, Click the ID number for link to organisation") ;
+                    $iExcelHeadCol++;
+                    $iExcelHeadColLM++;
+                    $iExcelHeadColLU++;
+                    $iExcelHeadColLB++;
+                }
+                $objPHPExcel->setActiveSheetIndex(0)->getCellByColumnAndRow("$iExcelCol",$iExcelRow)->getHyperlink()->setUrl("http://enterprise.skillsarena.com/Organisation/index.php?ID=$id");
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValueByColumnAndRow("$iExcelCol",$iExcelRow, "$id");
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB("0000ff");
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelCol",$iExcelRow, "$id"); 
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB("0000ff");
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelCol",$iExcelRow, "$id");
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB("0000ff");
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelCol",$iExcelRow, "$id");
+                $objPHPExcelLB->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB("0000ff");
+                $iExcelCol++;
+                $iExcelColLM++;
+                $iExcelColLU++;
+                $iExcelColLB++;
+            } 
+        }
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, "$id");     
+        $iExcelColJ++;
+                 
+        if($cb_Active){
+            if($objOrganisation->m_Active==1)
+                $Active="Yes";                
+            else
+                $Active="No";                
+            if(isset($objPHPExcelAS)){
+                if($bAddHeader){                               
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Active"); 
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Active"); 
+                    $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Active");
+                    $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Active");  
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Yes or No Direct From System");
+                    $iExcelHeadCol++; 
+                    $iExcelHeadColLM++;
+                    $iExcelHeadColLU++;
+                    $iExcelHeadColLB++;                                             
+                }
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$Active);                                 
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow,$Active);                                 
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow,$Active);                                 
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow,$Active);                                 
+                $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;
+                $iExcelColLM++;
+                $iExcelColLU++;
+                $iExcelColLB++;
+            } 
+        }
+        if($objOrganisation->m_Active==1)
+            $Active="Yes";                
+        else
+            $Active="No";        
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ", $iExcelRow,$Active);
+        $iExcelColJ++;     
+        
+        if($cb_OrganisationName){            
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Name"); 
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Name"); 
+                    $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Name");
+                    $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Name");     
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Direct From System") ;
+                    $iExcelHeadCol++;
+                    $iExcelHeadColLM++;
+                    $iExcelHeadColLU++;
+                    $iExcelHeadColLB++;                                                                    
+                }            
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_Name);
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);  
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow, $objOrganisation->m_Name);
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_Name);
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $objOrganisation->m_Name);
+                $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;
+                $iExcelColLM++;
+                $iExcelColLU++;
+                $iExcelColLB++;
+            }    
+        }
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_Name);     
+        $iExcelColJ++;
+        if($cb_OrganisationNotes){
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Notes"); 
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Notes"); 
+                    $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Notes");
+                    $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Notes");     
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Direct From System") ;
+                    $iExcelHeadCol++;
+                    $iExcelHeadColLM++;
+                    $iExcelHeadColLU++;
+                    $iExcelHeadColLB++;                                                                    
+                }            
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_Notes);
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow, $objOrganisation->m_Notes);
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_Notes);
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $objOrganisation->m_Notes);
+                $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;
+                $iExcelColLM++;
+                $iExcelColLU++;
+                $iExcelColLB++;
+            }                
+        }
+        if($cb_OrganisationLicenceNotes){
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Licence Notes"); 
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Licence Notes"); 
+                    $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Licence Notes");
+                    $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Licence Notes");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Direct From System") ;
+                    $iExcelHeadCol++;
+                    $iExcelHeadColLM++;
+                    $iExcelHeadColLU++;
+                    $iExcelHeadColLB++;                                                                    
+                }            
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_LicenceNotes);
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow, $objOrganisation->m_LicenceNotes);
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_LicenceNotes);
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $objOrganisation->m_LicenceNotes);
+                $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;
+                $iExcelColLM++;
+                $iExcelColLU++;
+                $iExcelColLB++;
+            }                            
+        }
+        if($cb_Type){
+            if($objOrganisation->m_LicenceTypeID==1)
+                $Type="Subscription";                
+            else
+                $Type="Credits";                
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Type");
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Type"); 
+                    $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Type");
+                    $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Type");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Subscription or Credit account.") ;
+                    $iExcelHeadCol++;
+                    $iExcelHeadColLM++;
+                    $iExcelHeadColLU++;
+                    $iExcelHeadColLB++;                            
+                }                                                                                      
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $Type);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow, $Type);    
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $Type);    
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $Type);    
+                $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);                    
+                $iExcelCol++;
+                $iExcelColLM++;
+                $iExcelColLU++;
+                $iExcelColLB++;
+            }    
+        }
+        if($objOrganisation->m_LicenceTypeID==1)
+            $Type="Subscription";                
+        else
+            $Type="Credits";
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $Type);     
+        $iExcelColJ++;   
+        if($IncludeDemos){
+            $Demo="NO";
+            if($objOrganisation->m_DemoAccount==1)
+                $Demo="YES";                
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Demo Account");
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Is this a demo account");
+                    $iExcelHeadCol++;                            
+                }            
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$Demo);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                            
+            }    
+        } 
+        // FREEZE PANES
+        if(isset($objPHPExcelAS)){ 
+            if($bAddHeader){
+                $objPHPExcelAS->freezePaneByColumnAndRow($iExcelHeadCol, 3);
+                $objPHPExcelLM->freezePaneByColumnAndRow($iExcelHeadCol, 3);
+                $objPHPExcelLU->freezePaneByColumnAndRow($iExcelHeadCol, 3);
+                $objPHPExcelLB->freezePaneByColumnAndRow($iExcelHeadCol, 3);
+            } 
+        }
+        if($cb_ParentOrganisation)
+        {
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Parent Organisation");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Show parent organisation if set") ;
+                    $iExcelHeadCol++;                            
+                }   
+                $ParentOrg="";         
+                if($objOrganisation->m_ParentOrganisationID)
+                    $ParentOrg=$objOrganisation->get_ParentOrganisationDisplayName();
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol",$iExcelRow,$ParentOrg);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;            
+            }  
+
+        }
+        $ParentOrg="";         
+        if($objOrganisation->m_ParentOrganisationID)
+            $ParentOrg=$objOrganisation->get_ParentOrganisationDisplayName();
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $ParentOrg);     
+        $iExcelColJ++;  
+        if($cb_WebServices)
+        {
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Web Services");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Show webservice or none") ;
+                    $iExcelHeadCol++;                            
+                }            
+                if($objOrganisation->m_WebServiceID==0||$objOrganisation->m_WebServiceID==null)
+                    $webS="";
+                elseif(isset($serviceOptions[$objOrganisation->m_WebServiceID]))
+                    $webS=$serviceOptions[$objOrganisation->m_WebServiceID];
+                else
+                    $webS="";
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $webS);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;            
+            }  
+
+        }
+        if($objOrganisation->m_WebServiceID==0||$objOrganisation->m_WebServiceID==null)
+            $webS="";
+        elseif(isset($serviceOptions[$objOrganisation->m_WebServiceID]))
+            $webS=$serviceOptions[$objOrganisation->m_WebServiceID];
+        else
+            $webS="";
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $webS);     
+        $iExcelColJ++; 
+        if($cb_UserCount){
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "User Count");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Number of Users (Admins)") ;
+                    $iExcelHeadCol++;                            
+                }            
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, count($objOrganisation->m_Users));    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;            
+            }   
+        }       
+        if($cb_Branded){
+            $ResourcePath="";
+            if($objOrganisation->m_ResourcePath!==null&&strlen(trim($objOrganisation->m_ResourcePath)))
+                $ResourcePath="Yes: {$objOrganisation->m_ResourcePath}";
+            if(isset ($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Branding");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Branding applied") ;
+                    $iExcelHeadCol++;                            
+                }            
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$ResourcePath);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;
+            }    
+        }                                                    
+        if($cb_CYOLicence){ 
+            $CYOLicence="No";
+            if($objOrganisation->m_CYOLicence==1)
+                $CYOLicence="Yes";
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "CYO Licence");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Is CYO Licence turned on") ;
+                    $iExcelHeadCol++;                            
+                }   
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$CYOLicence);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                
+            }      
+        }
+        if($cb_UsesDvisions){
+            $UsesDivs="No";
+            if($objOrganisation->m_UsesDivisions==1)
+                $UsesDivs="Yes";
+            $sStyle="color:#000000;";              
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Uses Divisions");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Are Divisions turned on") ;
+                    $iExcelHeadCol++;                            
+                }   
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$UsesDivs);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                   
+            }      
+        }
+        if($cb_UsesDepartments){
+            $UsesDepts="No";
+            if($objOrganisation->m_UsesDepartments==1)
+                $UsesDepts="Yes";
+            $sStyle="color:#000000;";  
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Uses Departments");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Are Departments turned on") ;
+                    $iExcelHeadCol++;                            
+                }   
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$UsesDepts);    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                
+            }      
+        }
+        if($cb_ContactName){                 
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Title");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Title of skillsareas contact") ;
+                    $iExcelHeadCol++;                            
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Forname");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Forname of skillsareas contact") ;
+                    $iExcelHeadCol++;                            
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Surname");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Surname of skillsareas contact") ;
+                    $iExcelHeadCol++;                            
+                }            
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_PrimaryContactUser->m_Title);                                                                                
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_PrimaryContactUser->m_Forename);
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_PrimaryContactUser->m_Surname);                                                    
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+            }
+        }      
+        if($cb_ContactNum){                 
+            $Phone=$objOrganisation->m_Phone;
+            // Force it as text for excel
+            $aMatches=array();
+            if(strlen($Phone)&&preg_match_all("/[0-9]/",$Phone,$aMatches)==strlen($Phone))
+                $Phone=trim(chunk_split($Phone,4,' '));
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow,"Phone Number");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Contact Phone Number") ;
+                    $iExcelHeadCol++;                                                        
+                }                
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$Phone);
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                           
+            }
+        }      
+        if($cb_Address){  
+            $FullAddress="";
+            if(isset($objOrganisation->m_Address1)) { $FullAddress=$objOrganisation->m_Address1;}
+            if(isset($objOrganisation->m_Address2)) { $FullAddress=$FullAddress." ".$objOrganisation->m_Address2;}
+            if(isset($objOrganisation->m_Address3)) { $FullAddress=$FullAddress." ".$objOrganisation->m_Address3;}
+            if(isset($objOrganisation->m_Address4)) { $FullAddress=$FullAddress." ".$objOrganisation->m_Address4;}
+            if(isset($objOrganisation->m_PostCode)) { $FullAddress=$FullAddress." ".$objOrganisation->m_PostCode;}
+            if(isset($objOrganisation->m_County))   { $FullAddress=$FullAddress." ".$objOrganisation->m_County;}
+            if(isset($objOrganisation->m_Country))  { $FullAddress=$FullAddress." ".$objOrganisation->m_Country;}
+            $FullAddress=trim($FullAddress);
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Address");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Address Consolidated") ;
+                    $iExcelHeadCol++;                                                        
+                }  
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$FullAddress);                                                                                
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                           
+            }
+        }           
+        if($cb_Email){                 
+            if (isset ($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Email");                                                        
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Email") ;                            
+                    $iExcelHeadCol++;          
+                } 
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, "=HYPERLINK(\"mailto:{$objOrganisation->m_Email}?subject=".$g_CurrentOrganisation->get_ParentOrganisationDisplayName()." account\", \"{$objOrganisation->m_Email}\")");
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+            }
+        }      
+        //Area
+        if($cb_Area){                 
+            $sStyle="color:#0000000;";
+            if(strlen($objOrganisation->m_Address4))  
+                $sAddress = $objOrganisation->m_Address4;                        
+            else if(strlen($objOrganisation->m_Address3))  
+                $sAddress = $objOrganisation->m_Address3;                        
+                else if(strlen($objOrganisation->m_County))
+                    $sAddress = $objOrganisation->m_County;                                    
+                    else if(strlen($objOrganisation->m_Country))
+                        $sAddress = $objOrganisation->m_Country;                        
+                        else
+                            $sAddress = "";  
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Area");     
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Area") ;
+                    $iExcelHeadCol++;  
+                }
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $sAddress );                                                                                
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+            }
+        }      
+        if($cb_Credits){
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Credits");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Credits- Only shown if credits is selected") ;
+                    $iExcelHeadCol++;                                                        
+                }  
+                if(isset($objOrganisation->m_CurrentCredits)){  
+
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_CurrentCredits);                                                                                
+                    $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);                    
+                }     
+                $iExcelCol++;
+            }
+        }
+        if(isset($objOrganisation->m_CurrentCredits)){
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_CurrentCredits); 
+        }
+        $iExcelColJ++; 
+        if($cb_LicenceStart){
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Licence Start");      
+                    rluComment($objPHPExcelLM,$iExcelHeadColLM,$iExcelHeaderRow,"","Licence Start date DD/mm/yyyy") ;
+                    $iExcelHeadColLM++;    
+                }  
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceStartDate)));                
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);                
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);
+                $iExcelColLM++;                           
+            }
+        }
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceStartDate))); 
+        $objPHPExcelJS->getStyleByColumnAndRow("$iExcelColJ",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);    
+        $iExcelColJ++; 
+        if($cb_LicenceEnd) {
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Licence Ends");      
+                    rluComment($objPHPExcelLM,$iExcelHeadColLM,$iExcelHeaderRow,"","Licence Start date DD/mm/yyyy") ;
+                    $iExcelHeadColLM++;                                                        
+                }  
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceEndDate)));                                                
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);
+                $iExcelColLM++;   
+            }   
+        }
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceEndDate))); 
+        $objPHPExcelJS->getStyleByColumnAndRow("$iExcelColJ",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);    
+        $iExcelColJ++;
+        if($cb_MonthsIntoLicence)  {
+            $sMsg="";
+            $sStyle="color:#53af00;";            
+            if(get_php_date_from_db_date($objOrganisation->m_LicenceEndDate)<time())
+            {
+                $sMsg=translator_get_text_("Expired after {1} Months","AdminUI_Reports",false,array($iLicencePeriodMonths));
+                $sStyle="color:#ff0000;";
+            }
+            else
+            {
+                $sMsg=translator_get_text_("{1} Months (out of {2} month licence)","AdminUI_Reports",false,array($iLicenceMonths,$iLicencePeriodMonths));
+            }
+            if(isset ($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Months into licence");      
+                    rluComment($objPHPExcelLM,$iExcelHeadColLM,$iExcelHeaderRow,"","Months into licence ......Months of ......") ;
+                    $iExcelHeadColLM++;                                                        
+                }   
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow, $sMsg);
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelColLM++;                           
+            }
+        }
+        if($cb_Monthsleft){
+            $sMsg2="test";
+            $sStyle="color:#000000;";  
+            if(get_php_date_from_db_date($objOrganisation->m_LicenceEndDate)<time())
+            {
+                $sMsg2=translator_get_text_("Expired after {1} Months","AdminUI_Reports",false,array($iLicencePeriodMonths));
+                $sStyle="color:#ff0000;";
+            }
+            else
+            {
+                $sMsg2=translator_get_text_("{1} Months Remaining","AdminUI_Reports",false,array($iMonthsRemaining));
+            }
+            if (isset ($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Months Remaining");      
+                    rluComment($objPHPExcelLM,$iExcelHeadColLM,$iExcelHeaderRow,"","Months Remaining") ;
+                    $iExcelHeadColLM++;                                                        
+                }   
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow, $sMsg2);
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelColLM++;                           
+            }
+        }
+        if($cb_AccountDirector){                    
+            if(isset($objOrganisation->m_AccountDirectorUser->m_Forename)&&($objOrganisation->m_AccountDirectorUser->m_Forename))
+                $sDirector = $objOrganisation->m_AccountDirectorUser->m_Forename." ".$objOrganisation->m_AccountDirectorUser->m_Surname;        
+            else if(isset($objOrganisation->m_AccountDirectorUser->m_Forename))
+                $sDirector =    $objOrganisation->m_AccountDirectorUser->m_Forename;        
+                else if(isset($objOrganisation->m_AccountDirectorUser->m_Surname))
+                    $sDirector = $objOrganisation->m_AccountDirectorUser->m_Surname;        
+                    else
+                        $sDirector = " ";
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Account Director");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Account Director") ;
+                    $iExcelHeadCol++;                                                        
+                }   
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $sDirector);
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                           
+            }
+        }
+        if($cb_Lastlogin){
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Last Log in ");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Last Log in ") ;
+                    $iExcelHeadCol++;                                                        
+                }   
+                if(isset($objOrganisation->m_LastLoginUser))
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LastLoginUser->m_ModifiedAt)));
+                else
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, " ");
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getNumberFormat()->setFormatCode("d-mmm-yy h:mm:ss");
+                $iExcelCol++;                           
+            }
+
+        }
+        if($cb_LastlogInUser){            
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Last Log in user ");      
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Last Log in user ") ;
+                    $iExcelHeadCol++;                                                        
+                }   
+                if(isset($objOrganisation->m_LastLoginUser))
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, ($objOrganisation->m_LastLoginUser->m_Forename." ".$objOrganisation->m_LastLoginUser->m_Surname));
+                else
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, " ");
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;                           
+            }
+        }       
+        if($cb_OrganisationType){                 
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Organisation Type");                                                        
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Organisation Type") ;
+                    $iExcelHeadCol++;          
+                } 
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, (translator_get_text($objOrganisation->GetMemberValue("OrganisationType->Name"),"AdminUI_Reports")));                               
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+            }
+        }   
+        if($cb_OrganisationIndustry){                 
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Oraganisation Industry");                                                        
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Oraganisation Industry") ;
+                    $iExcelHeadCol++;          
+                } 
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, (translator_get_text($objOrganisation->GetMemberValue("OrganisationIndustry->Industry"),"AdminUI_Reports")));                               
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+            }
+        }   
+        if($cb_createdAt){                 
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Created at");                                                        
+                    rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Created at") ;
+                    $iExcelHeadCol++;          
+                } 
+                $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_CreatedAt)));
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getNumberFormat()->setFormatCode("d-mmm-yy h:mm:ss");
+                $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelCol++;   
+            }
+        }   
+        if($cb_monthbymonth){
+            if(isset($objPHPExcelAS)){  
+                if($bAddHeader){
+                    $slstart=excel_cell($iExcelHeadColLM, $iExcelHeaderRow);
+                    $slEnd=excel_cell($iExcelHeadColLM,$iExcelHeaderRow);
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Licence Start");      
+                    rluComment($objPHPExcelLM,$iExcelHeadColLM,$iExcelHeaderRow,"","Licence Start Date") ;
+                    $iExcelHeadColLM++;   
+                    $sStart2=excel_cell($iExcelHeadColLM-1, $iExcelHeaderRow-1);
+                    $iExcelHeadCol2=$iExcelHeadColLM-1;
+                    $iExcelEndRow=count($aResults);
+                    $sEnd2=excel_cell($iExcelHeadCol2,$iExcelEndRow+2);
+                    $objPHPExcelLM->duplicateStyleArray($BStyle,"$sStart2:$sEnd2");  
+                }  
+                $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceStartDate)));
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFill()->applyFromArray($Excel_Yellow);   
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);
+                $iExcelColLM++;     
+            }
+        } 
+        else 
+        {
+            $slstart=excel_cell($iExcelHeadColLM, $iExcelHeaderRow);
+            $slEnd=excel_cell($iExcelHeadColLM,$iExcelHeaderRow);
+
+        }
+        //Month by month TITLES
+        if($cb_monthbymonth){
+            if($bAddHeader){
+                // FIGURE OUT MONTHS   
+                $iStartCol=$iExcelHeadColLM;
+                $iYear=$iStartYear;
+                while($iYear<=$iEndYear)
+                {
+                    for($iMonth=1;$iMonth<=12;$iMonth++)
+                    {
+                        $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, $aMonths[$iMonth-1]);  
+                        $iExcelHeadColLM++;                        
+                    }
+                    // Year head
+
+                    $objPHPExcelLM->setCellValueByColumnAndRow($iStartCol, $iExcelHeaderRow-1, $iYear);
+                    $objPHPExcelLM->mergeCellsByColumnAndRow($iStartCol,$iExcelHeaderRow-1,$iExcelHeadColLM-1,$iExcelHeaderRow-1);
+
+                    $sStart=excel_cell($iStartCol, $iExcelHeaderRow-1);
+                    $sEnd=excel_cell($iExcelHeadColLM-1,$iExcelHeaderRow);
+                    $objPHPExcelLM->duplicateStyleArray($aStyle,"$sStart:$sEnd");
+                    // move on
+                    $iStartCol=$iExcelHeadColLM;
+
+                    $iYear++;
+                }     
+                // Look back hihglighting (cols)
+                $iLookbackStart=$iExcelHeadColLM-$iInLast;
+                $iLookbackEnd=$iExcelHeadColLM-1; 
+            }
+            $aStyleLicenceStart=array(
+                'fill'      =>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb' => 'fffae0')),
+                'borders'   => array(
+                    'top'      => array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'fffae0')),
+                    'bottom'      => array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'fffae0')),
+                    'left'      => array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),
+                    'right'      => array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))
+                ),
+                'alignment'=>array(
+                    'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                    'vertical'   => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                    'rotation'   => 0
+                )
+            );  
+
+            $objPHPExcelLM->duplicateStyleArray($aStyleLicenceStart,"$slstart:$slEnd"); 
+            $iExcelColStart = $iExcelColLM; 
+        }  
+        $iExcelColStart = $iExcelColLM; 
+
+        if($cb_monthbymonth||$cb_lookbackperiod||$cb_LicecencePeriod){   
+            $iYear=$iStartYear;                      
+            $PerMnthsUsedNEW =array();
+            if(isset($objOrganisation->m_ByMonth))
+            {           
+                while($iYear<=$iEndYear)
+                {
+                    for($iMonth=1;$iMonth<=12;$iMonth++)
+                    {   
+                        if(isset($objOrganisation->m_ByMonth[($iYear."-".$iMonth)]))
+                            $PerMnthsUsedNEW[] = $objOrganisation->m_ByMonth[($iYear."-".$iMonth)];
+                        else
+                            $PerMnthsUsedNEW[] = "";
+                    }
+                    $iYear++;
+                }
+            }   
+            if($cb_monthbymonth)     
+            {
+                foreach ($PerMnthsUsedNEW as $value){
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow, $value);      
+                    $iExcelColLM++;
+                }
+            } 
+
+            $today2 = format_date($objOrganisation->m_LicenceStartDate,"%d %b %Y",true);       
+            $d1 = new DateTime("$today2");
+
+            $sdom = date("d",strtotime($objOrganisation->m_LicenceStartDate));
+            $smonth = date("m",strtotime($objOrganisation->m_LicenceStartDate));
+
+            $today3 = format_date($objOrganisation->m_LicenceEndDate,"%d %b %Y",true);       
+            $d3 = new DateTime("$today3");
+
+            $edom = date("d",strtotime($objOrganisation->m_LicenceEndDate));
+            $emonth = date("m",strtotime($objOrganisation->m_LicenceEndDate));
+
+            $year = date('Y')+2;
+            $d2 = new DateTime("$year-1-1");   
+            $today = date("Y-m-d");  
+            $today1 = new DateTime("$today ");
+            $istartdatenum_v1=0;
+            $THISMONTH_v1=0;
+            $istartdatenum_v2=0;
+            $THISMONTH_v2=0;
+            $istartdatenum_v3=0;
+            $THISMONTH_v3=0;
+            // v3 = uses existing function
+            $istartdatenum_v3=months_between($d1->format("Y-m-d H:i:s"), $d2->format("Y-m-d H:i:s"));
+            $THISMONTH_v3=months_between($today1->format("Y-m-d H:i:s"), $d2->format("Y-m-d H:i:s"));
+            if($sdom > 1)
+                $istartdatenum_v3 += 1;
+            if(($sdom > $edom) && $smonth == $emonth)
+                $iLicencePeriodMonths+=1;
+            $istartdatenum=$istartdatenum_v3;
+            $THISMONTH=$THISMONTH_v3;
+            $ienddatenum = $istartdatenum-$iLicencePeriodMonths ;
+
+
+            $istartdatenumCOL  =  $iExcelColLM - $istartdatenum ;
+            if ($istartdatenumCOL<$iExcelColStart)
+                $istartdatenumCOL = $iExcelColStart;
+            $iEnddatenumCOL  =  $iExcelColLM - $ienddatenum ;
+            $sStart2  =  $iExcelColLM - ($THISMONTH + 1) ;
+            if($iEnddatenumCOL>$iExcelColLM)
+                $iEnddatenumCOL = $iExcelColLM;
+            // if($iEnddatenumCOL>$iExcelCol)
+            $sEnd=excel_cell($iEnddatenumCOL-1,$iExcelRow);
+            if($iEnddatenumCOL<$iExcelColLM)
+            {
+                $sEnd=excel_cell($iEnddatenumCOL,$iExcelRow);
+            }
+            $sStart=excel_cell($istartdatenumCOL, $iExcelRow);
+            $sStart2=excel_cell($sStart2, $iExcelRow);
+            $aStyleliceneMonths=array(
+                'fill'      =>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb' => 'fffae0')),
+                'borders'   => array(
+                    'bottom'      => array('style'=>PHPExcel_Style_Border::BORDER_DOTTED,'color'=>array('rgb'=>'000000')),
+                    'top'      => array('style'=>PHPExcel_Style_Border::BORDER_DOTTED,'color'=>array('rgb'=>'000000')),
+                    'left'      => array('style'=>PHPExcel_Style_Border::BORDER_DOTTED,'color'=>array('rgb'=>'000000')),
+                    'right'      => array('style'=>PHPExcel_Style_Border::BORDER_DOTTED,'color'=>array('rgb'=>'000000'))
+                ),
+                'alignment'=>array(
+                    'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                    'vertical'   => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                    'rotation'   => 0
+                )
+            );  
+
+
+            if($cb_monthbymonth)     
+            {                        
+                //temp stops error and allow to run.  but need to know why its breaking stuart adamson create cell if valid start and end positions only issue if "include deactivated" selected        
+                if($iEnddatenumCOL > 0 && $iExcelRow > 0)
+                    $objPHPExcelLM->duplicateStyleArray($aStyleliceneMonths,"$sStart:$sEnd");
+                $objPHPExcelLM->duplicateStyleArray($aStylelightgreen,"$sStart2:$sStart2"); 
+            } 
+
+            $iLicencePeriodTotal = 0;
+            $iExcelColLM = $iExcelColStart;
+            foreach($PerMnthsUsedNEW as $iLicencePeriodTotal1)
+            {
+                if(strlen($iLicencePeriodTotal1)&&$iExcelColLM>($istartdatenumCOL-1))
+                    $iLicencePeriodTotal+=$iLicencePeriodTotal1;
+                if($cb_monthbymonth)   
+                {
+                    $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);                   
+                    $iExcelColLM++;
+                }
+            }
+            //end Date
+            if($cb_monthbymonth) {
+                if (isset ($objPHPExcelAS)){  
+                    if($bAddHeader){
+                        $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelHeadColLM", $iExcelHeaderRow, "Licence End");      
+                        $objPHPExcelLM->getStyleByColumnAndRow($iExcelHeadColLM,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightOrange);   
+                        $objPHPExcelLM->getStyleByColumnAndRow($iExcelHeadColLM,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightOrange);   
+                        rluComment($objPHPExcelLM,$iExcelHeadColLM,$iExcelHeaderRow,"","Licence End Date") ;
+                        $iExcelHeadColLM++;      
+                        $sStart2=excel_cell($iExcelHeadColLM-1, $iExcelHeaderRow-1);
+                        $iExcelHeadCol2 = $iExcelHeadColLM-1;
+                        $iExcelEndRow = count($aResults);
+                        $sEnd2=excel_cell($iExcelHeadCol2,$iExcelEndRow+2);
+                        $objPHPExcelLM->duplicateStyleArray($BStyle,"$sStart2:$sEnd2");
+                    }  
+                    $objPHPExcelLM->setCellValueByColumnAndRow("$iExcelColLM", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceEndDate)));
+                    $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);
+                    $objPHPExcelLM->getStyleByColumnAndRow("$iExcelColLM",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                    $iExcelColLM++;   }   }
+        }  
+
+        if($cb_LicecencePeriod){
+
+            $objOrganisation->m_Licence_AssignmentsRange=$iLicencePeriodTotal;
+            //EsimatedUsage
+            if($bAddHeader){ 
+                $SstartMerge = $iExcelColLU;
+                $LeftBottomyellow=array('fill'=>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb' => 'ff0000')),'borders'=>array('bottom'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=> array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))));
+                $sStart=excel_cell($iExcelHeadColLU, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLU,$iExcelHeaderRow);     
+                $objPHPExcelLU->duplicateStyleArray($LeftBottomyellow,"$sStart:$sEnd");                 
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Allocated Usage");                 
+                rluComment($objPHPExcelLU,$iExcelHeadColLU,$iExcelHeaderRow,"","Purchased, pulled in from the system") ;
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);                           
+                $iExcelHeadColLU++;          
+            } 
+            $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_EstimatedUsageAmount);                  
+            $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLU++; 
+            //$objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_EstimatedUsageAmount);
+            //$iExcelColJ++; 
+            //total in licence
+            if($bAddHeader){
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "# Assignments");                                       
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadColLU++;          
+            } 
+            $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $iLicencePeriodTotal);                  
+            $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLU++; 
+            //$objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $iLicencePeriodTotal);
+            //$iExcelColJ++;        
+
+            //Average since licence started            
+            if($iLicencePeriodTotal!=0&&$iLicenceFullMonths)
+                $objOrganisation->m_LicenceAveragePerMonth=round(($iLicencePeriodTotal/$iLicenceFullMonths));
+            else
+                $objOrganisation->m_LicenceAveragePerMonth = " ";
+
+            if($bAddHeader){
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Monthly Average");                 
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                rluComment($objPHPExcelLU,$iExcelHeadColLU,$iExcelHeaderRow,"","Average since licence started") ;
+                $iExcelHeadColLU++;          
+            } 
+            $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_LicenceAveragePerMonth);                  
+            $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLU++;
+            //$objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_LicenceAveragePerMonth);
+            //$iExcelColJ++;          
+            // FairUsageAmount
+            /*
+            if($bAddHeader){
+            $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Fair Usage Amount");                 
+            //                        $objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_Red);   
+            //                    $objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_Red);   
+            rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Fair Usage Amount") ;
+            $iExcelHeadCol++;          
+            } 
+            $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_FairUsageAmount);                  
+            //              $objPHPExcelAS->getStyleByColumnAndRow($iExcelCol,$iExcelRow)->getFill()->applyFromArray($Excel_LightGreen);        
+            $iExcelCol++;         
+            */
+            //Fair use difference
+            //$objOrganisation->m_EstUsageDiffence= round($iLicencePeriodTotal-$objOrganisation->m_EstimatedUsageAmount);                
+            $objOrganisation->m_percentOfUsageEstimateLicence=0;
+            if($objOrganisation->m_EsimatedUsage!=0){
+                $objOrganisation->m_percentOfUsageEstimateLicence=round(($iLicencePeriodTotal/$objOrganisation->m_EstimatedUsageAmount)*100);  
+            } 
+            if($bAddHeader){
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "% Of Allocation Used");                 
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);   
+                rluComment($objPHPExcelLU,$iExcelHeadColLU,$iExcelHeaderRow,"","Fair usage difference") ;
+                $iExcelHeadColLU++;          
+            } 
+               
+            //  if($objOrganisation->m_LicenceTypeID==1){
+            if ($objOrganisation->m_percentOfUsageEstimateLicence<35)
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_35);
+            else if($objOrganisation->m_percentOfUsageEstimateLicence>=35 && $objOrganisation->m_percentOfUsageEstimateLicence<50)
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_50);
+                else if($objOrganisation->m_percentOfUsageEstimateLicence>=50 && $objOrganisation->m_percentOfUsageEstimateLicence<75)
+                    $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_Less75);
+                    else if($objOrganisation->m_percentOfUsageEstimateLicence>=50 && $objOrganisation->m_percentOfUsageEstimateLicence>=75)
+                        $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_More75);
+                        $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_TEXT);
+            $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_percentOfUsageEstimateLicence . "%");        
+            $iExcelColLU++;
+            
+            
+            //$objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_percentOfUsageEstimateLicence . "%");
+            //$iExcelColJ++;
+            //    }
+            //     if($objOrganisation->m_LicenceTypeID==2){
+            //         $objPHPExcelAS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, " ");       
+            //          $objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            //         $iExcelCol++;
+            //     }  
+            //Forcast
+            if($iLicencePeriodTotal>0&&$iLicenceMonths>0)
+                $objOrganisation->m_ForecastUsage=round(($iLicencePeriodTotal/$iLicenceMonths)*$iLicencePeriodMonths);                
+            else
+                $objOrganisation->m_ForecastUsage="";
+
+            if($bAddHeader){ 
+                // Merge cells
+                $endMerge =     $iExcelColLU;
+                $objPHPExcelLU->setCellValueByColumnAndRow($SstartMerge, $iExcelHeaderRow-1, "Licence Period To Date");
+                $objPHPExcelLU->mergeCellsByColumnAndRow($SstartMerge,$iExcelHeaderRow-1,$iExcelHeadColLU-1,$iExcelHeaderRow-1);
+                $sStart=excel_cell($SstartMerge, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLU-1,$iExcelHeaderRow-1);
+                $aStyle=array('fill'=>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb' => 'fffae0')),'borders'=>array('top'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'right'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0));     
+                $objPHPExcelLU->duplicateStyleArray($aStyleBlue,"$sStart:$sEnd"); 
+                // Licence period
+            }
+
+            if($bAddHeader){
+                $SstartMerge = $iExcelColLU;    
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Forcast");                 
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_Yellow);   
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_Yellow);   
+                rluComment($objPHPExcelLU,$iExcelHeadColLU,$iExcelHeaderRow,"","Forcast") ;                        
+                $iExcelHeadColLU++;          
+                $LeftBottomyellow=array('fill'=>array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb' =>'fffae0')),'borders'=>array('bottom'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=> array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))));   
+                $sStart=excel_cell($iExcelHeadColLU-1, $iExcelHeaderRow);
+                $sEnd=excel_cell($iExcelHeadColLU-1,$iExcelHeaderRow);      
+                $objPHPExcelLU->duplicateStyleArray($LeftBottomyellow,"$sStart:$sEnd");        
+            } 
+            $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_ForecastUsage);                  
+            //$objPHPExcelAS->getStyleByColumnAndRow($iExcelCol,$iExcelRow)->getFill()->applyFromArray($Excel_LightGreen);        
+            $iExcelColLU++;                      
+            //percentOfUsageEstimateLicence
+            $objOrganisation->m_forcastpersentofallication=0;
+            if($objOrganisation->m_EsimatedUsage!=0 && $iLicencePeriodTotal !=0 && $objOrganisation->m_ForecastUsage !=0){
+                $objOrganisation->m_forcastpersentofallication=round(($objOrganisation->m_ForecastUsage/$objOrganisation->m_EstimatedUsageAmount)*100);  
+            } 
+            if($bAddHeader){
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Forcast % Of Allocation");                 
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_Yellow);   
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_Yellow);   
+                rluComment($objPHPExcelAS,$iExcelHeadColLU,$iExcelHeaderRow,"","") ;
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+                $iExcelHeadColLU++;          
+            }                                
+            $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow, $objOrganisation->m_forcastpersentofallication ."%");                    
+            if($objOrganisation->m_forcastpersentofallication<35)
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_35);
+            else if($objOrganisation->m_forcastpersentofallication>=35 && $objOrganisation->m_forcastpersentofallication<50)
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_50);
+                else if($objOrganisation->m_forcastpersentofallication>=50 && $objOrganisation->m_forcastpersentofallication<75)
+                    $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_Less75);
+                    else if($objOrganisation->m_forcastpersentofallication>=50 && $objOrganisation->m_forcastpersentofallication>=75)
+                        $objPHPExcelLU->getStyleByColumnAndRow($iExcelColLU,$iExcelRow)->getFill()->applyFromArray($Excel_More75);     
+                        $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLU++;
+            //Fair Usage Diffence Percent
+            //#Credit Estimaions - Last two columns Php and Excel
+            // !IMPORTANT__UNComment to have it <30credits
+            //$i=$aOrganisation['CurrentCredits'];
+            if($bAddHeader){
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelHeadColLU", $iExcelHeaderRow, "Allocation Runs Out in (Estimate)");                 
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_Yellow);   
+                $objPHPExcelLU->getStyleByColumnAndRow($iExcelHeadColLU,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_Yellow);   
+                rluComment($objPHPExcelLU,$iExcelHeadColLU,$iExcelHeaderRow,"","Fair usage ") ;
+                $iExcelHeadColLU++;          
+            }
+
+            $sCreditCredit="";
+            if($objOrganisation->m_LicenceTypeID==2){                                                                                                                   
+                if ($objOrganisation->m_CurrentCredits>0 && $objOrganisation->m_LicenceAveragePerMonth >0){
+                    $objOrganisation->m_DaysUntilMoreCredits= round(($objOrganisation->m_CurrentCredits/$objOrganisation->m_LicenceAveragePerMonth)*30);              
+                    $m_DaysUntilMoreCredits = $objOrganisation->m_DaysUntilMoreCredits;
+                    $d= $objOrganisation->m_DaysUntilMoreCredits;    
+                    $sCreditCredit = " "."$d"." days";         
+                }
+                elseif ($objOrganisation->m_CurrentCredits = 0) {
+                    $sCreditCredit =  "No credits remaining"; 
+                }                                            
+                elseif ($objOrganisation->m_LicenceAveragePerMonth=0) {
+                    $sCreditCredit =  "Insufficient data"; 
+                }
+            }
+            if($objOrganisation->m_LicenceTypeID==1){ 
+                if($objOrganisation->m_LicenceAveragePerMonth>0){        
+                    $objOrganisation->m_DaysUntilMoreCredits= round((($objOrganisation->m_EstimatedUsageAmount-$iLicencePeriodTotal)/$objOrganisation->m_LicenceAveragePerMonth)*30);                 
+                    $m_DaysUntilMoreCredits = $objOrganisation->m_DaysUntilMoreCredits;
+                    $d= $objOrganisation->m_DaysUntilMoreCredits;    
+                    $sCreditCredit = " "."$d"." days";         
+                }
+                else{
+                    $sCreditCredit =  "allocation used"; 
+                }
+            }    
+
+            if(isset($objPHPExcelAS))                                                           
+            { 
+                $objPHPExcelLU->setCellValueByColumnAndRow("$iExcelColLU", $iExcelRow,$sCreditCredit); 
+                $objPHPExcelLU->getStyleByColumnAndRow("$iExcelColLU",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour); 
+            }
+
+            if(isset($objPHPExcelAS))                                                           
+            {  
+                $sCommentCell=excel_cell($iExcelColLU,$iExcelRow);     
+                $objCommentRichText=$objPHPExcelLU->getComment($sCommentCell)->getText()->createTextRun(translator_get_text("Credits Remaining:"));
+                $objPHPExcelLU->getComment($sCommentCell)->setAuthor($g_CurrentOrganisation->get_ParentOrganisationDisplayName());            
+                $objCommentRichText->getFont()->setBold(true);
+                $objCommentRichText->getFont()->setSize(9);
+                $objCommentRichText=$objPHPExcelLU->getComment($sCommentCell)->getText()->createTextRun($objOrganisation->m_CurrentCredits);
+                $objCommentRichText->getFont()->setSize(9);
+                $objCommentRichText->getFont()->setSize(9);
+                $objPHPExcelLU->getComment($sCommentCell)->setWidth("150px");
+                $objPHPExcelLU->getComment($sCommentCell)->setHeight("75px");   
+                $iExcelColLU++;                     
+            }
+        }
+        
+        $iLicencePeriodTotal = 0;
+        foreach($PerMnthsUsedNEW as $iLicencePeriodTotal1)
+        {
+            if(strlen($iLicencePeriodTotal1)&&$iExcelColLM>($istartdatenumCOL-1))
+                $iLicencePeriodTotal+=$iLicencePeriodTotal1;
+        }
+        if($iLicencePeriodTotal!=0&&$iLicenceFullMonths)
+            $objOrganisation->m_LicenceAveragePerMonth=round(($iLicencePeriodTotal/$iLicenceFullMonths));
+        else
+            $objOrganisation->m_LicenceAveragePerMonth = " ";
+        $objOrganisation->m_percentOfUsageEstimateLicence=0;
+        if($objOrganisation->m_EsimatedUsage!=0){
+            $objOrganisation->m_percentOfUsageEstimateLicence=round(($iLicencePeriodTotal/$objOrganisation->m_EstimatedUsageAmount)*100);  
+        } 
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_EstimatedUsageAmount);
+        $iExcelColJ++;
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $iLicencePeriodTotal);
+        $iExcelColJ++;
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_LicenceAveragePerMonth);
+        $iExcelColJ++;
+        $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelColJ",$iExcelRow, $objOrganisation->m_percentOfUsageEstimateLicence . "%");
+        $iExcelColJ++;
+        
+        
+        
+        if($cb_LicecencePeriod){
+            // Merge cells
+            if($bAddHeader){
+                $endMerge=$iExcelCol;
+                $sStart=excel_cell($SstartMerge, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLU-1,$iExcelHeaderRow-1);    
+                $objPHPExcelAS->duplicateStyleArray($aStyle,"$sStart:$sEnd"); 
+                $sStart=excel_cell($SstartMerge, $iExcelHeaderRow);
+                $sEnd=excel_cell($iExcelHeadColLU,$iExcelHeaderRow);  
+                $objPHPExcelLU->setCellValueByColumnAndRow($SstartMerge, $iExcelHeaderRow-1, "Licence Period");
+                $objPHPExcelLU->mergeCellsByColumnAndRow($SstartMerge,$iExcelHeaderRow-1,$iExcelHeadColLU-1,$iExcelHeaderRow-1);
+            }
+        }
+
+        //LookBackperiod
+        if($cb_lookbackperiod){
+            //Months Used
+            // Months used in lookback period
+            if($bAddHeader){
+                $SstartMerge=$iExcelColLB; 
+                $sStart=excel_cell($iExcelHeadColLB, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLB,$iExcelHeaderRow);     
+                $BlueBottomeleft =array('fill'=>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'fffae0')),'borders'=>array('bottom'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))));
+                $objPHPExcelLB->duplicateStyleArray($BlueBottomeleft,"$sStart:$sEnd");      
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Months Used");                 
+                rluComment($objPHPExcelLB,$iExcelHeadColLB,$iExcelHeaderRow,"","Months used in the past $iInLast months") ;
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadColLB++;          
+            } 
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow,($objOrganisation->m_LastX_UsedMonths));                        
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;   
+
+            // Months used in lookback period
+            //  Months used/lookback period 
+            if($bAddHeader){
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Percent of months used");                 
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);   
+                rluComment($objPHPExcelLB,$iExcelHeadColLB,$iExcelHeaderRow,"","months used / Lock back period (.$iInLast.)") ;
+                $iExcelHeadColLB++;          
+            } 
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow,($objOrganisation->m_LastX_PercentageUsage."% out of ("."$iInLast".")"));                        
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;   
+            //
+            // Months used in lookback period
+            //  Months used/lookback period 
+            if($bAddHeader){
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Total Assignments in the last "."$iInLast"." Months");                 
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);   
+                rluComment($objPHPExcelLB,$iExcelHeadColLB,$iExcelHeaderRow,"","Total Assignments in the last "."$iInLast"." Months") ;
+                $iExcelHeadColLB++;          
+            } 
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow,($objOrganisation->m_LastX_AssignmentsTotal." Used in the last "."$iInLast"." months."));                        
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;   
+            //                    
+            //Average P/M
+            if($bAddHeader){
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Average tests used over the last "."$iInLast"." Months");                 
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);   
+                rluComment($objPHPExcelLB,$iExcelHeadColLB,$iExcelHeaderRow,"","Average tests used over the last "."$iInLast"." Months") ;
+                $iExcelHeadColLB++;          
+            } 
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow,($objOrganisation->m_LastX_AssignmentsAvg));                        
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;   
+            //Percent of usage estimate
+            //Average P/M
+            if($bAddHeader){
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Percent of estimate used over the last "."$iInLast"." Months");                 
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue); 
+                rluComment($objPHPExcelLB,$iExcelHeadColLB,$iExcelHeaderRow,"","Percent of estimate used over the last "."$iInLast"." Months") ;
+                $iExcelHeadColLB++;          
+            } 
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow,($objOrganisation->m_percentOfUsageEstimate));                        
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;   
+            // Merge cells
+            if($bAddHeader){        
+                $endMerge=$iExcelColLB;
+                $objPHPExcelLB->setCellValueByColumnAndRow($SstartMerge, $iExcelHeaderRow-1, "Looking Back "."$iInLast"."Months From Today");
+                $objPHPExcelLB->mergeCellsByColumnAndRow($SstartMerge,$iExcelHeaderRow-1,$iExcelHeadColLB-1,$iExcelHeaderRow-1);
+                $sStart=excel_cell($SstartMerge, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLB-1,$iExcelHeaderRow-1);    
+                $objPHPExcelLB->duplicateStyleArray($aStyleBlue,"$sStart:$sEnd");
+            }
+        }
+        //total ever used   
+        if($cb_SelectedRangeAssignments)  {
+            if($bAddHeader){
+
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow-1, "Selected Range");                 
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "# Assignments");  
+                $sStart=excel_cell($iExcelHeadColLB, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLB,$iExcelHeaderRow-1);
+                $aStyle=array('fill'=>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'fffae0')),'borders'=>array('top'=> array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=> array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'right'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0));     
+                $objPHPExcelLB->duplicateStyleArray($aStyle,"$sStart:$sEnd");   
+                $sStart=excel_cell($iExcelHeadColLB, $iExcelHeaderRow);
+                $sEnd=excel_cell($iExcelHeadColLB,$iExcelHeaderRow);                    
+
+                $aStyle=array('fill'=>array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'fffae0')),'borders'=>array('bottom'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'right'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0));     
+
+                $objPHPExcelLB->duplicateStyleArray($aStyle,"$sStart:$sEnd");         
+                rluComment($objPHPExcelLB,$iExcelHeadColLB,$iExcelHeaderRow,"","total used tests in selected years") ;
+                $iExcelHeadColLB++;
+
+            } 
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $objOrganisation->m_TotalEverUSed);                  
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;
+        }
+        
+        if($cb_LifetimeAssignments)  {
+            if($bAddHeader){
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow-1, "Lifetime");                 
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "# Assignments");  
+                $sStart=excel_cell($iExcelHeadColLB, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLB,$iExcelHeaderRow-1);
+                $aStyle=array('fill'=>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb'=>'fffae0')),'borders'=>array('top'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'right'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0));     
+                $objPHPExcelLB->duplicateStyleArray($aStyle,"$sStart:$sEnd");   
+                $sStart=excel_cell($iExcelHeadColLB, $iExcelHeaderRow);
+                $sEnd=excel_cell($iExcelHeadColLB,$iExcelHeaderRow);
+                $aStyle=array('fill'=>array('type'=>PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb' => 'fffae0')),'borders'=>array('bottom'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'right'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))),'alignment'=>array('horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,'rotation'=>0));     
+                $objPHPExcelLB->duplicateStyleArray($aStyle,"$sStart:$sEnd");         
+                rluComment($objPHPExcelLB,$iExcelHeadColLB,$iExcelHeaderRow,"","total used tests") ;
+                $iExcelHeadColLB++;          
+            } 
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $objOrganisation->m_TotalEverUSedComplete);                  
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;            
+        }
+
+        if($cb_topFiveTests == true)
+        {
+            $SstartMerge=$iExcelColLB;    
+            if($bAddHeader)
+            {
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Test 1");                                       
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadColLB++;          
+            }     
+            if(isset($topFive[$objOrganisation->m_OrganisationID][0]))
+                $test=$topFive[$objOrganisation->m_OrganisationID][0]['TestName'].' - '.$topFive[$objOrganisation->m_OrganisationID][0]['assignTimes'];
+            else 
+                $test='';    
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $test);                  
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;    
+            if($bAddHeader)
+            {
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Test 2");                                       
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadColLB++;          
+            }  
+            if(isset($topFive[$objOrganisation->m_OrganisationID][1]))
+                $test=$topFive[$objOrganisation->m_OrganisationID][1]['TestName'].' - '.$topFive[$objOrganisation->m_OrganisationID][1]['assignTimes'];
+            else 
+                $test='';    
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $test);                  
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;    
+            if($bAddHeader)
+            {
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Test 3");                                       
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadColLB++;          
+            }  
+            if(isset($topFive[$objOrganisation->m_OrganisationID][2]))
+                $test=$topFive[$objOrganisation->m_OrganisationID][2]['TestName'].' - '.$topFive[$objOrganisation->m_OrganisationID][2]['assignTimes'];
+            else 
+                $test='';    
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $test);                  
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;    
+            if($bAddHeader)
+            {
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Test 4");                                       
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadColLB++;          
+            } 
+            if(isset($topFive[$objOrganisation->m_OrganisationID][3]))
+                $test=$topFive[$objOrganisation->m_OrganisationID][3]['TestName'].' - '.$topFive[$objOrganisation->m_OrganisationID][3]['assignTimes'];
+            else 
+                $test='';    
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $test);                  
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;    
+            if($bAddHeader)
+            {
+                $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelHeadColLB", $iExcelHeaderRow, "Test 5");                                       
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                $objPHPExcelLB->getStyleByColumnAndRow($iExcelHeadColLB,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadColLB++;          
+            } 
+            if(isset($topFive[$objOrganisation->m_OrganisationID][4]))
+                $test=$topFive[$objOrganisation->m_OrganisationID][4]['TestName'].' - '.$topFive[$objOrganisation->m_OrganisationID][4]['assignTimes'];
+            else 
+                $test='';    
+            $objPHPExcelLB->setCellValueByColumnAndRow("$iExcelColLB", $iExcelRow, $test);                  
+            $objPHPExcelLB->getStyleByColumnAndRow("$iExcelColLB",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelColLB++;    
+            if($bAddHeader)
+            {
+                $endMerge=$iExcelColLB;
+                $objPHPExcelLB->setCellValueByColumnAndRow($SstartMerge, $iExcelHeaderRow-1, "Top Five Tests");
+                $objPHPExcelLB->mergeCellsByColumnAndRow($SstartMerge,$iExcelHeaderRow-1,$iExcelHeadColLB-1,$iExcelHeaderRow-1);
+                $sStart=excel_cell($SstartMerge, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadColLB-1,$iExcelHeaderRow-1);    
+                $objPHPExcelLB->duplicateStyleArray($aStyleBlue,"$sStart:$sEnd");
+            }
+        }
+        $bAddHeader=false;
+        $iExcelCol=0;
+        $iExcelColLM=0;
+        $iExcelColLU=0;
+        $iExcelColLB=0;
+        $iExcelColJ=0;
+        $iExcelRow++;
+    } 
+
+    //END RESULTS LOOP                                                                    
+    if(isset($objPHPExcel))
+    {
+        // Lookback highlight
+        // $aStyle=array('borders'=>array('left'=>array('style'=>PHPExcel_Style_Border::BORDER_DOTTED,'color'=>array('rgb'=>'FF0000'))));
+
+                                                   
+        // Freeze panes
+        //$objPHPExcelAS->freezePaneByColumnAndRow(4, 3); 
+        
+        
+        ////////////////////////////////////////
+    /*   
+        $iExcelRow=3;
+        $iExcelHeaderRow=2;
+        $iExcelCol=0;
+        $iExcelHeadCol=0;
+        $bAddHeader=true;
+    
+        // create Jason's sheet 
+        $objPHPExcelJS=$objPHPExcel->createSheet(); 
+        // Rename 2nd sheet
+        $objPHPExcelJS->setTitle('Raw'); 
+        
+        foreach($aResults as $objOrganisation)  
+        {   
+            $id=$objOrganisation->m_OrganisationID;
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "ID");
+                $iExcelHeadCol++;
+            }
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol",$iExcelRow, "$id");
+            $iExcelCol++;
+            
+            if($objOrganisation->m_Active==1)
+                $Active="Yes";                
+            else
+                $Active="No";
+            if($bAddHeader){                               
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelHeaderRow, "Active");
+                $iExcelHeadCol++;                                              
+            }
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,$Active);
+            $iExcelCol++;
+             
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Name");
+                $iExcelHeadCol++;                                                                    
+            }            
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_Name);  
+            $iExcelCol++;
+             
+            if($objOrganisation->m_LicenceTypeID==1)
+                $Type="Subscription";                
+            else
+                $Type="Credits";                
+              
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Type");
+                $iExcelHeadCol++;                            
+            }                                                                                      
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $Type);                     
+            $iExcelCol++;
+            
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Parent Organisation");
+                $iExcelHeadCol++;                            
+            }   
+            $ParentOrg="";         
+            if($objOrganisation->m_ParentOrganisationID)
+                $ParentOrg=$objOrganisation->get_ParentOrganisationDisplayName();
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol",$iExcelRow,$ParentOrg); 
+            $iExcelCol++;
+              
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Web Services");
+                $iExcelHeadCol++;                            
+            }            
+            if($objOrganisation->m_WebServiceID==0||$objOrganisation->m_WebServiceID==null)
+                $webS="";
+            elseif(isset($serviceOptions[$objOrganisation->m_WebServiceID]))
+                $webS=$serviceOptions[$objOrganisation->m_WebServiceID];
+            else
+                $webS="";
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $webS);
+            $iExcelCol++;
+              
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Credits");
+                $iExcelHeadCol++;                                                        
+            }  
+            if(isset($objOrganisation->m_CurrentCredits)){  
+
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_CurrentCredits);                    
+            }     
+            $iExcelCol++; 
+            
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Licence Start"); 
+                $iExcelHeadCol++;    
+            }  
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceStartDate)));
+            $objPHPExcelJS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);
+            $iExcelCol++; 
+              
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Licence Ends");
+                $iExcelHeadCol++;                                                        
+            }  
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow,PHPExcel_Shared_Date::PHPToExcel(strtotime($objOrganisation->m_LicenceEndDate)));
+            $objPHPExcelJS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_XLSX15);
+            $iExcelCol++;   
+             
+            
+           
+          
+        
+        
+            $iYear=$iStartYear;                      
+            $PerMnthsUsedNEW =array();
+            if(isset($objOrganisation->m_ByMonth))
+            {           
+                while($iYear<=$iEndYear)
+                {
+                    for($iMonth=1;$iMonth<=12;$iMonth++)
+                    {   
+                        if(isset($objOrganisation->m_ByMonth[($iYear."-".$iMonth)]))
+                            $PerMnthsUsedNEW[] = $objOrganisation->m_ByMonth[($iYear."-".$iMonth)];
+                        else
+                            $PerMnthsUsedNEW[] = "";
+                    }
+                    $iYear++;
+                }
+            }   
+        
+            $iLicencePeriodTotal = 0;
+            $iExcelCol = $iExcelColStart;
+            foreach($PerMnthsUsedNEW as $iLicencePeriodTotal1)
+            {
+                if(strlen($iLicencePeriodTotal1)&&$iExcelCol>($istartdatenumCOL-1))
+                    $iLicencePeriodTotal+=$iLicencePeriodTotal1;
+            }
+            
+            
+            
+            $objOrganisation->m_Licence_AssignmentsRange=$iLicencePeriodTotal;
+            
+            
+            //EsimatedUsage
+            if($bAddHeader){ 
+                $SstartMerge = $iExcelCol;
+                $LeftBottomyellow=array('fill'=>array('type'=> PHPExcel_Style_Fill::FILL_SOLID,'color'=>array('rgb' => 'ff0000')),'borders'=>array('bottom'=>array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000')),'left'=> array('style'=>PHPExcel_Style_Border::BORDER_THIN,'color'=>array('rgb'=>'000000'))));
+                $sStart=excel_cell($iExcelHeadCol, $iExcelHeaderRow-1);
+                $sEnd=excel_cell($iExcelHeadCol,$iExcelHeaderRow);     
+                //$objPHPExcelJS->duplicateStyleArray($LeftBottomyellow,"$sStart:$sEnd");                 
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "Allocated Usage");                 
+                //rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Purchased, pulled in from the system") ;
+                //$objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                //$objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);                           
+                $iExcelHeadCol++;          
+            } 
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $objOrganisation->m_EstimatedUsageAmount);                  
+            //$objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelCol++; 
+            
+             
+            //total in licence
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "# Assignments");                                       
+                //$objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);    
+                //$objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                $iExcelHeadCol++;          
+            } 
+            $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelCol", $iExcelRow, $iLicencePeriodTotal);                  
+            //$objPHPExcelAS->getStyleByColumnAndRow("$iExcelCol",$iExcelRow)->getFont()->getColor()->setRGB($sFontColour);
+            $iExcelCol++;         
+
+                   
+                           
+            $objOrganisation->m_percentOfUsageEstimateLicence=0;
+            if($objOrganisation->m_EsimatedUsage!=0){
+                $objOrganisation->m_percentOfUsageEstimateLicence=round(($iLicencePeriodTotal/$objOrganisation->m_EstimatedUsageAmount)*100);  
+            } 
+            if($bAddHeader){
+                $objPHPExcelJS->setCellValueByColumnAndRow("$iExcelHeadCol", $iExcelHeaderRow, "% Of Allocation Used");                 
+                //$objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow)->getFill()->applyFromArray($Excel_LightBlue);   
+                //$objPHPExcelAS->getStyleByColumnAndRow($iExcelHeadCol,$iExcelHeaderRow-1)->getFill()->applyFromArray($Excel_LightBlue);   
+                //rluComment($objPHPExcelAS,$iExcelHeadCol,$iExcelHeaderRow,"","Fair usage difference") ;
+                $iExcelHeadCol++;          
+            }   
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+        
+        
+        
+        
+        
+            $bAddHeader=false;
+            $iExcelCol=0; 
+            $iExcelRow++;
+        }
+        
+        // Recalculate column sizes :) 
+        for($col='A';$col!='XX';$col++){
+            $objPHPExcelAS->getColumnDimension($col)->setAutoSize(true);
+        }  
+        
+        
+        $objPHPExcelJS->mergeCells('J1:M1');
+        $style = array(
+            'alignment' => array(
+                'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+            )
+        );
+        $objPHPExcelJS->getStyle("J1:M1")->applyFromArray($style);
+        $objPHPExcelJS->setCellValueByColumnAndRow(9, 1, "Licence Period To Date"); 
+        
+        // Recalculate column sizes :) 
+        for($col='A';$col!='XX';$col++){
+            $objPHPExcelJS->getColumnDimension($col)->setAutoSize(true);
+        } 
+        
+        
+    */    
+        
+        ////////////////////////////////////////
+        
+        
+        // Recalculate column sizes :) 
+        for($col='A';$col!='XX';$col++){
+            $objPHPExcelAS->getColumnDimension($col)->setAutoSize(true);
+        } 
+        for($col='A';$col!='XX';$col++){
+            $objPHPExcelLM->getColumnDimension($col)->setAutoSize(true);
+        }
+        for($col='A';$col!='XX';$col++){
+            $objPHPExcelLU->getColumnDimension($col)->setAutoSize(true);
+        }
+        for($col='A';$col!='XX';$col++){
+            $objPHPExcelLB->getColumnDimension($col)->setAutoSize(true);
+        }
+        for($col='A';$col!='XX';$col++){
+            $objPHPExcelJS->getColumnDimension($col)->setAutoSize(true);
+        } 
+        
+
+        // Save file
+        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');                                                                                                                  
+        $objWriter->save($file);  
+    }
+} 
+else
+{
+    $htmlContent.=("<p>".translator_get_text("Returned: 0 records.","AdminUI_Reports")."</p>");        
+    $htmlContent.=("<p>".translator_get_text("Excel Export Unavailable : No results returned.","AdminUI_Reports")."</p>");
+}
+$end=microtime(true);
+$time=number_format(($end - $start), 2);
+
+// done entry
+file_put_contents($sTxtFile,"done:{$iProcessing}:{$iProcessingCount}:{$time}");
+
+exit;
+?>

@@ -1,0 +1,4 @@
+As of version 5.3 we support pagging on root nodes. In order this to work the
+server should return only the root nodes and the rest of the data from the nodes
+are loaded on server request - i.e user click on node to load the data or
+simple - the autoloading nodes should be enabled.

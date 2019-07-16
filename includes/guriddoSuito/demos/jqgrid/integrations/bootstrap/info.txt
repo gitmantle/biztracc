@@ -1,0 +1,5 @@
+We support the Bootstrap via the jQuery UI for bootstrap
+
+The bootstrap integration require  including the additional grid file and jquery ui bootstrap css
+
+More on this can be found here: http://jquery-ui-bootstrap.github.io/jquery-ui-bootstrap/ 

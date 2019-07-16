@@ -1,0 +1,94 @@
+<?php
+session_start();
+$usersession = $_SESSION['usersession'];
+
+$admindb = $_SESSION['s_admindb'];
+require("../../db.php");
+mysql_select_db($admindb) or die(mysql_error());
+$query = "select * from sessions where session = '".$usersession."'";
+$result = mysql_query($query) or die(mysql_error());
+$row = mysql_fetch_array($result);
+extract($row);
+
+$q = 'select theme from users where uid = '.$user_id;
+$r = mysql_query($q);
+$row = mysql_fetch_array($r);
+extract($row);
+
+
+
+
+?>
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Set Theme</title>
+
+<script>
+function choosetheme(th) {
+		var x = 0, y = 0; // default values	
+		x = window.screenX +5;
+		y = window.screenY +100;
+		window.open('changetheme.php?thm='+th,'adpol','toolbar=0,scrollbars=1,height=160,width=580,resizable=1,left='+x+',screenX='+x+',top='+y+',screenY='+y);
+}
+
+
+</script>
+
+</head>
+
+<body style="background:url(../../images/back.jpg)">
+
+
+<form id="themeform" name="themeform" method="post" action="">
+ <input type="hidden" name="savebutton" id="savebutton" value="N">
+ <input type="hidden" name="themeh" id="themeh" value="<?php echo $theme; ?>">
+ 
+  <table width="600" border="0" >
+    <tr>
+      <td colspan="4" align="left">Double click on preferred theme</td>
+    </tr>
+    <tr>
+      <td><img src="../../images/black_tie.png" width="90" height="80" alt="blacktie" title="Black Tie" ondblclick="choosetheme('black-tie')" /></td>
+      <td><img src="../../images/redmond.png" width="90" height="80" alt="redmond" title="Redmond" ondblclick="choosetheme('redmond')"/></td>
+      <td><img src="../../images/blitzer.png" width="90" height="80" alt="blitzer" title="Blitzer" ondblclick="choosetheme('blitzer')" /></td>
+      <td><img src="../../images/vader.png" width="90" height="80" alt="vader" title="Vader" ondblclick="choosetheme('vader')" /></td>
+    </tr>
+    <tr>
+      <td><img src="../../images/cupertino.png" width="90" height="80" alt="cupertino" title="Cupertino" ondblclick="choosetheme('cupertino')" /></td>
+      <td><img src="../../images/sunny.png" width="90" height="80" alt="sunny" title="Sunny" ondblclick="choosetheme('sunny')" /></td>
+      <td><img src="../../images/dark_hive.png" width="90" height="80" alt="darkhive" title="Dark Hive" ondblclick="choosetheme('dark-hive')" /></td>
+      <td><img src="../../images/ui_light.png" alt="uilight" width="90" height="80" title="ui-Light" ondblclick="choosetheme('ui-lightness')" /></td>
+    </tr>
+    <tr>
+      <td><img src="../../images/dot_luv.png" width="90" height="80" alt="dotluv" title="Dot Luv" ondblclick="choosetheme('dot-luv')" /></td>
+      <td><img src="../../images/swanky_purse.png" width="90" height="80" alt="swanky" title="Swanky" ondblclick="choosetheme('swanky-purse')" /></td>
+      <td><img src="../../images/humanity.png" width="90" height="80" alt="humanity" title="Humanity" ondblclick="choosetheme('humanity')" /></td>
+      <td><img src="../../images/trontastic.png" width="90" height="80" alt="trontastic" title="Trontastic" ondblclick="choosetheme('trontastic')" /></td>
+    </tr>
+    <tr>
+      <td><img src="../../images/eggplant.png" width="90" height="80" alt="eggplant" title="Eggplant" ondblclick="choosetheme('eggplant')" /></td>
+      <td><img src="../../images/ui_dark.png" width="90" height="80" alt="uidark" title="ui-Dark" ondblclick="choosetheme('ui-darkness')" /></td>
+      <td><img src="../../images/le_frog.png" width="90" height="80" alt="lefrog" title="Le Frog" ondblclick="choosetheme('le-frog')" /></td>
+      <td><img src="../../images/smoothness.png" width="90" height="80" alt="smoothness" title="Smoothness" ondblclick="choosetheme('smoothness')" /></td>
+    </tr>
+    <tr>
+      <td><img src="../../images/excite_bike.png" width="90" height="80" alt="excitebike" title="Excite Bike" ondblclick="choosetheme('excite-bike')" /></td>
+      <td><img src="../../images/flick.png" width="90" height="80" alt="flick" title="Flick" ondblclick="choosetheme('flick')" /></td>
+      <td><img src="../../images/hot_sneaks.png" width="90" height="80" alt="hotsneaks" title="Hot Sneaks" ondblclick="choosetheme('hot-sneaks')" /></td>
+      <td><img src="../../images/start.png" width="90" height="80" alt="start" title="Start" ondblclick="choosetheme('start')" /></td>
+    </tr>
+    <tr>
+      <td><img src="../../images/mint_choc.png" width="90" height="80" alt="mintchoc" title="Mint Choc" ondblclick="choosetheme('mint-choc')" /></td>
+      <td><img src="../../images/overcast.png" width="90" height="80" alt="overcast" title="Overcast" ondblclick="choosetheme('overcast')" /></td>
+      <td><img src="../../images/pepper_grinder.png" width="90" height="80" alt="peppergrinder" title="Pepper Grinder" ondblclick="choosetheme('pepper-grinder')" /></td>
+      <td><img src="../../images/south_street.png" width="90" height="80" alt="southstreet" title="South Street" ondblclick="choosetheme('south-street')" /></td>
+    </tr>
+  </table>
+</form>
+
+</body>
+</html>

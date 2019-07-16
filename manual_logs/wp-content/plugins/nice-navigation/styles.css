@@ -1,0 +1,45 @@
+div.nice_navigation ul,
+#main .widget-area div.nice_navigation ul /* twenty ten override */
+{
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+div.nice_navigation li {
+	margin: 0;
+	padding: 0 0 0 15px;
+}
+
+div.nice_navigation li.page-has-children {
+	background: url(images/arrow-right.gif) no-repeat -3px 0px;
+	padding: 0 0 0 15px;
+	cursor: pointer;
+}
+
+div.nice_navigation ul ul li {
+	padding-left: 5px;
+}
+
+div.nice_navigation li.current_page_ancestor,
+div.nice_navigation li.current_page_parent,
+div.nice_navigation li.nice-navigation-selected,
+div.nice_navigation li.current_page_item.page-has-children
+ {
+	background: url(images/arrow-down.gif) no-repeat -3px 0px;
+}
+
+div.nice_navigation li.nice-navigation-deselected {
+	background-image: url(images/arrow-right.gif) !important;
+}
+
+div.nice_navigation li.current_page_item > a
+ {
+	font-weight: bold;
+}
+
+div.nice_navigation li.current_page_item li {
+	font-weight: normal;
+}
+
+div.nice_navigation_look_wikipedia {
+}

@@ -1,0 +1,31 @@
+This is a IMPORTANT upgrade guide to version 4.8.
+
+1. The ui.jqgrid.css file should be replaced with the last one.
+2. Language files (grid.locale-xx.js) should be replaced with the last one. If this is not performed a error will appear and grid will not be build.
+3. The method GridUnload – i.e $(“#grid”).jqGrid(‘GridUnload’) does not have effect.
+   Replace the old with the new one $.jgrid.gridUnload(‘#jqGridId’); where jqGridId is the id of the grid
+4. The method GridDestroy – i.e $(“#grid”).jqGrid(‘GridDestroy’) does not have effect.
+   Replace the old with the new one $.jgrid.gridDestroy(‘#jqGridId’); where jqGridId is the id of the grid
+5. The method jqGridImport – i.e $(“#grid”).jqGrid(‘jqGridImport’,options) does not have effect.
+   Replace the old with the new one $.jgrid.jqGridImport(‘#jqGridId’, options); where jqGridId is the id of the grid
+6. The $.jgrid.defaults property is unchanged and it is possible to use $.extend($.jgrid.defaults, {…});
+    All other parameter from the language file should be changed this way:
+    Suppose the current language file is English, then extending the edit parameters should be replaced from
+
+    $.extend($.jgrid.edit, {…});
+
+    to
+
+    $.extend($.jgrid.regional[‘en’].edit, {…});
+
+    The same apply for all other parameters in language file.
+7. To load your own language file you will need to setup the regional parameter in the grid.
+    Let suppose that default language file should be grid.locale-cn.js, then in grid it is needed to do this:
+
+    $("#jqGrid").jqGrid({
+    ...
+    regional : 'cn',
+    ...
+    });
+    the code regional parameter in grid options correspond to the last two character in the javascript files
+

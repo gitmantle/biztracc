@@ -1,0 +1,5 @@
+Sorting is enabled by default for all jqGrid columns. To sort a column, just click on the header of the respective column.
+As of version 4.5 we support sorting on multiple columns. To enable this set multiSort option to true.
+The default sorting logic of the grid in almost all cases is good enough -- depending on the type of the column (date, int, float, double, etc) it sorts the column while switching ascending and descending orders.
+In case of multi sort when first time clicked the sort is asc(or descending) the next click sort to oposite direction the third click of the 
+column remove the sorting from that column.

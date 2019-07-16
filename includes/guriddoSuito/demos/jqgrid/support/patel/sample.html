@@ -1,0 +1,270 @@
+<html>
+    <head>
+        <title>Sample fundamentals</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="assets/styles/bootstrap/bootstrap.min.css" type="text/css" >
+		<link type="text/css" href="assets/js/lib/jqgrid/css/ui.jqgrid-bootstrap.css" rel="stylesheet"/>
+		<link type="text/css" href="assets/js/lib/jqgrid/css/custom.jqgrid.css" rel="stylesheet"/>
+		<link type="text/css" href="assets/styles/master.css" rel="stylesheet">
+		<link type="text/css" href="assets/styles/ivest-font.css" rel="stylesheet">
+		<script type="text/javascript" src="assets/js/lib/jquery/jquery-1.10.2.min.js"></script>
+		<script type="text/javascript" src="assets/js/lib/bootstrap/bootstrap.min.js"></script>
+		<script type="text/javascript" src="assets/js/lib/jqgrid/grid.locale-en.js"></script>
+		<script type="text/javascript" src="assets/js/lib/jqgrid/jquery.jqGrid.min.js"></script>
+		<!--<script type="text/javascript" src="sample.js"></script> -->
+		<style type="text/css">
+	</style>
+	
+    </head>	
+    <body>
+		<table id="grid"></table>
+		<script type="text/javascript">
+		$.jgrid.defaults.responsive = true;
+		$.jgrid.defaults.styleUI = 'Bootstrap';	
+		var myData = [
+  {
+    "symbol": "MSFT171208C00087000",
+    "description": "MSFT Dec 08 2017 87.0 Call",
+    "openDate": "11/09/2017",
+    "netOpen": 27,
+    "closeDate": "12/08/2017",
+    "netClose": 2,
+    "gainLoss": 25,
+    "option": true,
+    "shares": 100,
+    "equity": false,
+    "stock": false,
+    "type": "O",
+    "stkSymbol": "MSFT",
+    "qty": -1,
+    "days": 29,
+    "multiplier": -1
+  },
+  {
+    "symbol": "MSFT171208C00088000",
+    "description": "MSFT Dec 08 2017 88.0 Call",
+    "openDate": "11/09/2017",
+    "netOpen": 20,
+    "closeDate": "12/08/2017",
+    "netClose": 0,
+    "gainLoss": -20,
+    "option": true,
+    "shares": 100,
+    "equity": false,
+    "stock": false,
+    "type": "O",
+    "stkSymbol": "MSFT",
+    "qty": 1,
+    "days": 29,
+    "multiplier": 1
+  },
+  {
+    "symbol": "MSFT171208P00083000",
+    "description": "MSFT Dec 08 2017 83.0 Put",
+    "openDate": "11/09/2017",
+    "netOpen": 132,
+    "closeDate": "12/08/2017",
+    "netClose": 0,
+    "gainLoss": -132,
+    "option": true,
+    "shares": 100,
+    "equity": false,
+    "stock": false,
+    "type": "O",
+    "stkSymbol": "MSFT",
+    "qty": 1,
+    "days": 29,
+    "multiplier": 1
+  },
+  {
+    "symbol": "MSFT171208P00084000",
+    "description": "MSFT Dec 08 2017 84.0 Put",
+    "openDate": "11/09/2017",
+    "netOpen": 179,
+    "closeDate": "12/08/2017",
+    "netClose": 2,
+    "gainLoss": 177,
+    "option": true,
+    "shares": 100,
+    "equity": false,
+    "stock": false,
+    "type": "O",
+    "stkSymbol": "MSFT",
+    "qty": -1,
+    "days": 29,
+    "multiplier": -1
+  },
+  {
+    "symbol": "NUE180105C00051500",
+    "description": "NUE Jan 05 2018 51.5 Call",
+    "openDate": "12/08/2017",
+    "netOpen": 5425,
+    "closeDate": "01/05/2018",
+    "netClose": 0,
+    "gainLoss": -5425,
+    "option": true,
+    "shares": 100,
+    "equity": false,
+    "stock": false,
+    "type": "O",
+    "stkSymbol": "NUE",
+    "qty": 5,
+    "days": 28,
+    "multiplier": 1
+  },
+  {
+    "symbol": "NUE180105C00054000",
+    "description": "NUE Jan 05 2018 54.0 Call",
+    "openDate": "12/08/2017",
+    "netOpen": 1780,
+    "closeDate": "01/05/2018",
+    "netClose": 0,
+    "gainLoss": 1780,
+    "option": true,
+    "shares": 100,
+    "equity": false,
+    "stock": false,
+    "type": "O",
+    "stkSymbol": "NUE",
+    "qty": -4,
+    "days": 28,
+    "multiplier": -1
+  },
+  {
+    "symbol": "BMY",
+    "description": "BMY",
+    "openDate": "08/25/2017",
+    "netOpen": 5835,
+    "closeDate": "12/08/2017",
+    "netClose": 6257,
+    "gainLoss": 422,
+    "option": false,
+    "shares": 1,
+    "equity": true,
+    "stock": true,
+    "type": "E",
+    "stkSymbol": "BMY",
+    "qty": 100,
+    "days": 105,
+    "multiplier": 1
+  },
+  {
+    "symbol": "CSIQ",
+    "description": "CSIQ",
+    "openDate": "09/12/2017",
+    "netOpen": 1632,
+    "closeDate": "02/05/2018",
+    "netClose": 1544,
+    "gainLoss": -88,
+    "option": false,
+    "shares": 1,
+    "equity": true,
+    "stock": true,
+    "type": "E",
+    "stkSymbol": "CSIQ",
+    "qty": 100,
+    "days": 146,
+    "multiplier": 1
+  },
+  {
+    "symbol": "NUE",
+    "description": "NUE",
+    "openDate": "01/05/2018",
+    "netOpen": 5150,
+    "closeDate": "02/05/2018",
+    "netClose": 6272,
+    "gainLoss": 1122,
+    "option": false,
+    "shares": 1,
+    "equity": true,
+    "stock": true,
+    "type": "E",
+    "stkSymbol": "NUE",
+    "qty": 100,
+    "days": 31,
+    "multiplier": 1
+  },
+  {
+    "symbol": "NUE",
+    "description": "NUE",
+    "openDate": "01/05/2018",
+    "netOpen": 20600,
+    "closeDate": "01/05/2018",
+    "netClose": 21600,
+    "gainLoss": 1000,
+    "option": false,
+    "shares": 1,
+    "equity": true,
+    "stock": true,
+    "type": "E",
+    "stkSymbol": "NUE",
+    "qty": 400,
+    "days": 0,
+    "multiplier": 1
+  }
+]
+var table = $("#grid");
+var colModel = [];
+		colModel.push({label: ' ', name: 'stkSymbol', hidden:true,formatter:"string"});
+		colModel.push({label: '', name: 'multiplier', hidden:true,formatter:'number'});
+		colModel.push({label: 'Description', name: 'description', align:'left',width:100,title:false,formatter:"string"});
+		colModel.push({label: 'Type', name: 'type', align:'center',width:30,title:false});
+		colModel.push({label: 'Open', name: 'openDate', align:'center',width:60,formatter:'date',title:false,formatoptions:{srcformat:'m/d/Y',newformat:'m/d/Y'}});
+		colModel.push({label: 'Net Open', name: 'netOpen', align:'right',width:40,formatter:'number',formatoptions: {decimalPlaces: 2,defaultValue:''},title:false});
+		colModel.push({label: 'Days', name: 'days', align:'center',width:60,formatter:'number',formatoptions: {decimalPlaces: 0,defaultValue:''},title:false});
+		colModel.push({label: 'qty', name: 'qty',formatter:'number',formatoptions: {decimalPlaces: 0,defaultValue:''},hidden:true});
+		colModel.push({label: 'Close', name: 'closeDate', align:'center',width:40,formatter:'date',title:false,formatoptions:{srcformat:'m/d/Y',newformat:'m/d/Y'}});
+		colModel.push({label: 'Net Close', name: 'netClose', align:'right',width:60,formatter:'number',formatoptions: {decimalPlaces: 2,defaultValue:''}});
+		colModel.push({label: 'Gain/Loss', name: 'gainLoss', align:'right',width:60,formatter:'posNegFmatter',summaryType:'sum'});
+		
+		table.jqGrid({
+			data:myData,
+			datatype: "local",
+			colModel: colModel,
+			loadonce: true,
+			autowidth:true,
+			//width: 780,
+			height: '100%',
+			altRows:true,
+			rowNum: 1000,
+			viewrecords: true,
+			gridview:true,
+			shrinkToFit:true,
+			headertitles:true,
+			footerrow:true,
+			grouping:true,
+			groupingView:{
+				groupField : ['stkSymbol'],
+				groupColumnShow : [false],
+				groupCollapse:true,
+				groupText:['<b>{0}</b>'],
+				groupSummary : [true],
+				groupSummaryPos:['header'],
+				showSummaryOnHide: true
+			},
+			gridComplete : function() {
+				table.jqGrid ('setLabel', 'description', 'Description', {'text-align':'left'});
+				table.jqGrid ('setLabel', 'openDate', 'Open', {'text-align':'center'});
+				table.jqGrid ('setLabel', 'closeDate', 'Close', {'text-align':'center'});
+				table.jqGrid ('setLabel', 'days', 'Days', {'text-align':'center'});
+				//now update the total here
+				//var colSum = $grid.jqGrid('getCol', '<Your column name>', false, 'sum');
+				//$grid.jqGrid('footerData', 'set', { 'Your column name>: colSum });
+				var totalOpen = 0,totalClose = 0;
+				
+				var rows = table.jqGrid("getGridParam", "data");
+				if(rows.length > 0){
+					$.each(rows,function(index,item){
+						totalOpen += item.netOpen * item.multiplier;
+						totalClose += item.netClose * item.multiplier;
+					});
+					var colSum = table.jqGrid('getCol', 'gainLoss', false, 'sum');
+					table.jqGrid('footerData', 'set', {gainLoss: colSum,netOpen:totalOpen,netClose:totalClose});
+				}
+			}
+		});
+		</script>
+</body>
+</html>
+

@@ -1,0 +1,1 @@
+We can view mode the form edit dialog. The solution here removes the post button and disables the Enter to submit data

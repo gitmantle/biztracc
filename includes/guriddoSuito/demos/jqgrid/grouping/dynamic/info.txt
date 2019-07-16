@@ -1,0 +1,3 @@
+You can group rows in the grid by a particular column (field). Just add a groupField to the groupingView collection.
+With the build in methods the dynamic grouping is easy.
+Look at the code in the php tab

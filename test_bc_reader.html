@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Test Bar code Reader</title>
+
+<script>
+
+function ok() {
+	val = document .getElementById('bccode').value;
+	alert('The bar code is '+val);
+	document.getElementById('bccode').value = '';
+ 	document.getElementById('bccode').focus();
+}
+
+</script>
+
+</head>
+
+<body>
+
+  <div id="bc" style="position:absolute;visibility:visible;top:104px;left:300px;height:100px;width:500px;border-width:thick thick thick thick; ; border-style:solid;">
+    <table>
+   		<tr>
+        	<td>With the cursor in this text box (the default), use the bar code reader attached to this computer to scan a barcode. The relevant code should appear in this text box.</td>
+        </tr>
+      <tr>
+        <td><input type="text" id="bccode" size="75" /></td>
+      </tr>
+      <tr>
+        <td align="right"><input type="button" name="ok" id="ok" value="OK" onClick="ok()" /></td>
+      </tr>
+    </table>
+  </div>
+ 
+ <script>
+ 	document.getElementById('bccode').focus();
+ </script>
+
+</body>
+</html>

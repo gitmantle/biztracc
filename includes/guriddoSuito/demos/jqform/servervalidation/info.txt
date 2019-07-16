@@ -1,0 +1,7 @@
+It is possible to validate the user input on server side too.
+For this purpose we use the build in PHP filter_var function.
+We support a validation for: number, email, integer, boolean, ip, url, text, date and more.
+Also we support, min, max and required properties
+
+It is needed to use the setValidation methiod to achieve this goal.
+See the PHP code tab.

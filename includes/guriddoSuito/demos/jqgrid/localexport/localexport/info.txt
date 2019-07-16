@@ -1,0 +1,4 @@
+It is possible now to export the local loaded data to various formats - cvs, excel, pdf
+The methods are easy to all and they contain a lot of configuration options
+
+For detailed implementation, please take a look at the PHP source code tab.

@@ -1,0 +1,292 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
+	<link rel="stylesheet" href="css/colorpicker.css" type="text/css">
+    <link rel="stylesheet" media="screen" type="text/css" href="css/layout.css">
+    <title>ColorPicker - jQuery plugin</title>
+	<script type="text/javascript" src="../includes/color_picker/js/jquery.js"></script>
+	<script type="text/javascript" src="../includes/color_picker/js/js/colorpicker.js"></script>
+    <script type="text/javascript" src="../includes/color_picker/js/js/eye.js"></script>
+    <script type="text/javascript" src="../includes/color_picker/js/js/utils.js"></script>
+    <script type="text/javascript" src="../includes/color_picker/js/js/layout.js?ver=1.0.2"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <h1>Color Picker - jQuery plugin</h1>
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5673865389945635";
+/* Recomandata */
+google_ad_slot = "2811626550";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+        <ul class="navigationTabs">
+            <li><a class="active" href="#about" rel="about">About</a></li>
+            <li><a class="" href="#download" rel="download">Download</a></li>
+            <li><a class="" href="#implement" rel="implement">Implement</a></li>
+        </ul>
+        <div class="tabsContent">
+            <div style="display: block;" class="tab">
+                <h2>About</h2>
+                <p>A simple component to select color in the same way you select color in Adobe Photoshop</p>
+				<h3>Last update</h3>
+				<p>23.05.2009 - Check Download tab</p>
+                <h3>Features</h3>
+                <ul>
+                    <li>Flat mode - as element in page</li>
+                    <li>Powerful controls for color selection</li>
+					<li>Easy to customize the look by changing some images</li>
+					<li>Fits into the viewport</li>
+                </ul>
+				<h3>License</h3>
+				<p>Dual licensed under the MIT and GPL licenses.</p>
+                <h3>Examples</h3>
+                <p>Flat mode.</p>
+                <p id="colorpickerHolder">
+                <div style="display: block; position: relative;" id="collorpicker_405" class="colorpicker"><div style="background-color: rgb(255, 0, 0);" class="colorpicker_color"><div><div style="left: 150px; top: 0px;"></div></div></div><div class="colorpicker_hue"><div style="top: 150px;"></div></div><div style="background-color: rgb(255, 0, 0);" class="colorpicker_new_color"></div><div style="background-color: rgb(255, 0, 0);" class="colorpicker_current_color"></div><div class="colorpicker_hex"><input maxlength="6" size="6" type="text"></div><div class="colorpicker_rgb_r colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_g colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_h colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_s colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_submit"></div></div></p>
+                <pre>$('#colorpickerHolder').ColorPicker({flat: true});
+                </pre>
+                <p>Custom skin and using flat mode to display the color picker in a custom widget.</p>
+				<div id="customWidget">
+					<div id="colorSelector2"><div style="background-color: #00ff00"></div></div>
+	                <div style="height: 0px; display: block;" id="colorpickerHolder2">
+	                <div style="display: block; position: absolute;" id="collorpicker_316" class="colorpicker"><div style="background-color: rgb(0, 255, 0);" class="colorpicker_color"><div><div style="left: 150px; top: 0px;"></div></div></div><div class="colorpicker_hue"><div style="top: 100px;"></div></div><div style="background-color: rgb(0, 255, 0);" class="colorpicker_new_color"></div><div style="background-color: rgb(0, 255, 0);" class="colorpicker_current_color"></div><div class="colorpicker_hex"><input maxlength="6" size="6" type="text"></div><div class="colorpicker_rgb_r colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_g colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_h colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_s colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_submit"></div></div></div>
+				</div>
+
+				<p>Attached to an text field and using callback functions to update the color with field's value and set the value back in the field by submiting the color.</p>
+				<p><input maxlength="6" size="6" id="colorpickerField1" value="00ff00" type="text"></p>
+				<p><input maxlength="6" size="6" id="colorpickerField3" value="0000ff" type="text"></p>
+				<p><input maxlength="6" size="6" id="colorpickerField2" value="ff0000" type="text"></p>
+				<pre>$('#colorpickerField1, #colorpickerField2, #colorpickerField3').ColorPicker({
+	onSubmit: function(hsb, hex, rgb, el) {
+		$(el).val(hex);
+		$(el).ColorPickerHide();
+	},
+	onBeforeShow: function () {
+		$(this).ColorPickerSetColor(this.value);
+	}
+})
+.bind('keyup', function(){
+	$(this).ColorPickerSetColor(this.value);
+});
+</pre>
+				<p>Attached to DOMElement and using callbacks to live preview the color and adding animation.</p>
+				<p>
+					</p><div id="colorSelector"><div style="background-color: #0000ff"></div></div>
+				<p></p>
+				<pre>$('#colorSelector').ColorPicker({
+	color: '#0000ff',
+	onShow: function (colpkr) {
+		$(colpkr).fadeIn(500);
+		return false;
+	},
+	onHide: function (colpkr) {
+		$(colpkr).fadeOut(500);
+		return false;
+	},
+	onChange: function (hsb, hex, rgb) {
+		$('#colorSelector div').css('backgroundColor', '#' + hex);
+	}
+});
+</pre>
+            </div>
+            <div style="display: none;" class="tab">
+                <h2>Download</h2>
+                <p><a href="colorpicker.zip">colorpicker.zip (89 kb)</a>: jQuery, Javscript files, CSS files, images, examples and instructions.</p>
+                <h3>Changelog</h3>
+                <dl>
+					<dt>23.05.2009</dt>
+					<dd>Added: close on color selection example</dd>
+					<dd>Added: restore original color option</dd>
+					<dd>Changed: color update on key up event</dd>
+					<dd>Fixed: colorpicker hide and show methods</dd>
+					<dd>Fixed: reference to options. Multiple fields with colorpickers is possible now.</dd>
+					<dd>Fixed: RGB to HSB convertion</dd>
+					<dt>22.08.2008</dt>
+					<dd>Fixed bug: where some events were not canceled right on Safari</dd>
+					<dd>Fixed bug: where teh view port was not detected right on Safari</dd>
+					<dt>16-07-2008</dt>
+					<dd>Fixed bug where the letter 'F' could not be typed in the Hex field</dd>
+					<dd>Fixed bug where the changes on Hex field where not parsed</dd>
+					<dd>Added new option 'livePreview'</dd>
+					<dt>08-07-2008</dt>
+					<dd>Fixed typo in the code, both JavaScript and CSS</dd>
+					<dd>Changed the cursor for some elements</dd>
+					<dd>Added new demo explaining how to implement custom skin</dd>
+					<dt>07.07.2008</dt>
+					<dd>The first release.</dd>
+                </dl>
+            </div>
+            <div style="display: none;" class="tab">
+                <h2>Implement</h2>
+                <p>Attach the Javascript and CSS files to your document. Edit CSS file and fix the paths to  images and change colors to fit your site theme.</p>
+                <pre>&lt;link rel="stylesheet" media="screen" type="text/css" href="css/colorpicker.css" /&gt;
+&lt;script type="text/javascript" src="js/colorpicker.js"&gt;&lt;/script&gt;
+                </pre>
+                <h3>Invocation code</h3>
+                <p>All you have to do is to select the elements in a jQuery way and call the plugin.</p>
+                <pre> $('input').ColorPicker(options);
+                </pre>
+                <h3>Options</h3>
+                <p>A hash of parameters. All parameters are optional.</p>
+                <table>
+                	<tbody><tr>
+                		<td><strong>eventName</strong></td>
+                		<td>string</td>
+                		<td>The desired event to trigger the colorpicker. Default: 'click'</td>
+                	</tr>
+                	<tr>
+                		<td><strong>color</strong></td>
+                		<td>string or hash</td>
+                		<td>The default color. String for hex color or hash for RGB and HSB ({r:255, r:0, b:0}) . Default: 'ff0000'</td>
+                	</tr>
+                	<tr>
+                		<td><strong>flat</strong></td>
+                		<td>boolean</td>
+                		<td>Whatever if the color picker is appended to the element or triggered by an event. Default false</td>
+                	</tr>
+                	<tr>
+                		<td><strong>livePreview</strong></td>
+                		<td>boolean</td>
+                		<td>Whatever if the color values are filled in the fields while changing values on selector or a field. If false it may improve speed. Default true</td>
+                	</tr>
+                	<tr>
+                		<td><strong>onShow</strong></td>
+                		<td>function</td>
+                		<td>Callback function triggered when the color picker is shown</td>
+                	</tr>
+                	<tr>
+                		<td><strong>onBeforeShow</strong></td>
+                		<td>function</td>
+                		<td>Callback function triggered before the color picker is shown</td>
+                	</tr>
+                	<tr>
+                		<td><strong>onHide</strong></td>
+                		<td>function</td>
+                		<td>Callback function triggered when the color picker is hidden</td>
+                	</tr>
+                	<tr>
+                		<td><strong>onChange</strong></td>
+                		<td>function</td>
+                		<td>Callback function triggered when the color is changed</td>
+                	</tr>
+                	<tr>
+                		<td><strong>onSubmit</strong></td>
+                		<td>function</td>
+                		<td>Callback function triggered when the color it is chosen</td>
+                	</tr>
+                </tbody></table>
+                <h3>Set color</h3>
+                <p>If you want to set a new color.</p>
+                <pre>$('input').ColorPickerSetColor(color);</pre>
+				<p>The 'color' argument is the same format as the option color, string for hex color or hash for RGB and HSB ({r:255, r:0, b:0}).</p>
+            </div>
+        </div>
+    </div>
+	
+<style>
+#cookieConsent {
+	position: fixed;
+	bottom: 0;
+	left: 50%;
+	width: 300px;
+	margin: 0 0 0 -151px;
+	padding: 10px;
+	border: 1px solid #bbb;
+	z-index: 10000;
+	background: #F9F9F9;
+	color: #444;
+	display: none;
+}
+
+#cookieConsent a {
+	color: #0088cc;
+}
+</style>
+<div style="display: block;" id="cookieConsent">
+	eyecon.ro is using cookies to personalise content and ads, to provide social media features and to analyse our traffic. I also share information about your use of my site with my social media, advertising and analytics partners.<a href="/cookies.html">See details</a><br><br>
+	By continuing to browse the site you are agreeing to my use of cookies. <a href="#" id="cookieConsentAgree"><b>? Continue</b></a>
+</div>
+<script>
+var monster = {
+	set: function(name, value, days, path, secure) {
+		var date = new Date(),
+			expires = '',
+			type = typeof(value),
+			valueToUse = '',
+			secureFlag = '';
+		path = path || "/";
+		if (days) {
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toUTCString();
+		}
+		if (type === "object" && type !== "undefined") {
+			if (!("JSON" in window)) throw "Bummer, your browser doesn't support JSON parsing.";
+			valueToUse = encodeURIComponent(JSON.stringify({
+				v: value
+			}));
+		}
+		else {
+			valueToUse = encodeURIComponent(value);
+		}
+		if (secure) {
+			secureFlag = "; secure";
+		}
+		document.cookie = name + "=" + valueToUse + expires + "; path=" + path + secureFlag;
+	},
+	get: function(name) {
+		var nameEQ = name + "=",
+			ca = document.cookie.split(';'),
+			value = '',
+			firstChar = '',
+			parsed = {};
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) === 0) {
+				value = decodeURIComponent(c.substring(nameEQ.length, c.length));
+				firstChar = value.substring(0, 1);
+				if (firstChar == "{") {
+					try {
+						parsed = JSON.parse(value);
+						if ("v" in parsed) return parsed.v;
+					}
+					catch (e) {
+						return value;
+					}
+				}
+				if (value == "undefined") return undefined;
+				return value;
+			}
+		}
+		return null;
+	}
+};
+if (!monster.get('cookieConsent')) {
+	var cookieConsentAct = function() {
+			document.getElementById('cookieConsent').style.display = 'none';
+			monster.set('cookieConsent', 1, 360, '/');
+		};
+	document.getElementById('cookieConsent').style.display = 'block';
+	var cookieConsentEl = document.getElementById('cookieConsentAgree');
+	if (cookieConsentEl.addEventListener) {
+		cookieConsentEl.addEventListener('click', cookieConsentAct, false);
+	}
+	else if (cookieConsentEl.attachEvent) {
+		cookieConsentEl.attachEvent("onclick", cookieConsentAct);
+	}
+	else {
+		cookieConsentEl["onclick"] = cookieConsentAct;
+	}
+}
+</script>
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-106117-1";
+urchinTracker();
+</script>
+
+
+<div style="left: 215.333px; top: 965.667px; display: none;" id="collorpicker_406" class="colorpicker"><div style="background-color: rgb(4, 0, 255);" class="colorpicker_color"><div><div style="left: 117px; top: 76px;"></div></div></div><div class="colorpicker_hue"><div style="top: 49px;"></div></div><div style="background-color: rgb(29, 27, 125);" class="colorpicker_new_color"></div><div style="background-color: rgb(0, 255, 0);" class="colorpicker_current_color"></div><div class="colorpicker_hex"><input maxlength="6" size="6" type="text"></div><div class="colorpicker_rgb_r colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_g colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_h colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_s colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_submit"></div></div><div id="collorpicker_960" class="colorpicker"><div style="background-color: rgb(255, 0, 0);" class="colorpicker_color"><div><div style="left: 150px; top: 0px;"></div></div></div><div class="colorpicker_hue"><div style="top: 150px;"></div></div><div style="background-color: rgb(255, 0, 0);" class="colorpicker_new_color"></div><div style="background-color: rgb(255, 0, 0);" class="colorpicker_current_color"></div><div class="colorpicker_hex"><input maxlength="6" size="6" type="text"></div><div class="colorpicker_rgb_r colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_g colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_h colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_s colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_submit"></div></div><div id="collorpicker_457" class="colorpicker"><div style="background-color: rgb(255, 0, 0);" class="colorpicker_color"><div><div style="left: 150px; top: 0px;"></div></div></div><div class="colorpicker_hue"><div style="top: 150px;"></div></div><div style="background-color: rgb(255, 0, 0);" class="colorpicker_new_color"></div><div style="background-color: rgb(255, 0, 0);" class="colorpicker_current_color"></div><div class="colorpicker_hex"><input maxlength="6" size="6" type="text"></div><div class="colorpicker_rgb_r colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_g colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_h colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_s colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_submit"></div></div><div id="collorpicker_312" class="colorpicker"><div style="background-color: rgb(0, 0, 255);" class="colorpicker_color"><div><div style="left: 150px; top: 0px;"></div></div></div><div class="colorpicker_hue"><div style="top: 50px;"></div></div><div style="background-color: rgb(0, 0, 255);" class="colorpicker_new_color"></div><div style="background-color: rgb(0, 0, 255);" class="colorpicker_current_color"></div><div class="colorpicker_hex"><input maxlength="6" size="6" type="text"></div><div class="colorpicker_rgb_r colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_g colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_rgb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_h colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_s colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_hsb_b colorpicker_field"><input maxlength="3" size="3" type="text"><span></span></div><div class="colorpicker_submit"></div></div></body></html>

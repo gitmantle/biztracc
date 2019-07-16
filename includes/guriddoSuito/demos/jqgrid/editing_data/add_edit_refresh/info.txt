@@ -1,0 +1,2 @@
+With a custom JavaScript code wqe can set the grid id correct in case it is Serial key.
+Note that the grid return the key in format Key#value.

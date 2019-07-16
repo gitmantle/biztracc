@@ -1,0 +1,242 @@
+/*
+*/
+/* 
+    Created on : Mar 5, 2015, 11:42:32 AM
+    Author     : tony
+*/
+
+
+*::after, *::before {
+    box-sizing: border-box;
+}
+*::after, *::before {
+    box-sizing: border-box;
+}
+* {
+    box-sizing: border-box;
+}
+
+.ui-form-horizontal {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857;
+}
+
+.ui-form-vertical {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857;
+}
+.ui-form-horizontal .ui-formgroup, ui-form-vertical ui-form-group {
+    content: " ";
+    display: table;
+}
+
+.ui-form-horizontal .ui-form-group:after, .ui-form-vertical .ui-form-group:after {
+	clear : both;
+}
+
+.ui-form-horizontal .ui-form-group:after, .ui-form-horizontal .ui-form-group:before {
+    content: " ";
+    display: table;
+}
+.ui-form-vertical .ui-form-group:after, .ui-form-vertical .ui-form-group:before {
+    content: " ";
+    display: table;
+}
+.form-horizontal .ui-form-group, ui-form-vertical .ui-form-group {
+    margin-left: -15px;
+    margin-right: -15px;
+}
+.ui-form-group {
+    margin-bottom: 15px;
+}
+* {
+    box-sizing: border-box;
+}
+
+.ui-form-horizontal .ui-control-label, .ui-form-vertical .ui-control-label {
+    margin-bottom: 0;
+    padding-top: 7px;
+    text-align: right;
+}
+.ui-col-sm-2 {
+    width: 16.6667%;
+}
+.ui-col-sm-10 {
+    width: 83.3333%;
+}
+.ui-col-sm-2, .ui-col-sm-10 {
+	float: left;
+}
+
+.ui-col-sm-2, .ui-col-sm-10 {
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px;
+    position: relative;
+}
+.ui-form-horizontal label, .ui-form-vertical label {
+    display: inline-block;
+    font-weight: 700;
+    margin-bottom: 5px;
+    max-width: 100%;
+}
+
+.ui-form-horizontal fieldset, .ui-form-vertical fieldset{
+    border: 0 none;
+    margin: 0;
+    min-width: 0;
+    padding: 0;
+}
+
+.ui-form-horizontal legend, .ui-form-vertical legend {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    border-color: -moz-use-text-color -moz-use-text-color #e5e5e5;
+    border-image: none;
+    border-style: none none solid;
+    border-width: 0 0 1px;
+    color: #333;
+    display: block;
+    font-size: 21px;
+    line-height: inherit;
+    margin-bottom: 20px;
+    padding: 0;
+    width: 100%;
+}
+
+.ui-form-control {
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    display: block;
+    font-size: 14px;
+    line-height: 1.42857;
+    padding: 6px 12px;
+    transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+    width: 100%;
+}
+.ui-col-sm-offset-2 {
+    margin-left: 16.6667%;
+}
+.ui-button, .ui-input, .ui-select, .ui-textarea {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+.ui-form-horizontal .ui-input, .ui-form-vertical .ui-input,.ui-form-inline .ui-input {
+    line-height: normal;
+}
+.ui-form-horizontal .ui-button, .ui-form-vertical .ui-button, .ui-form-inline .ui-button {
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857;
+    margin-bottom: 0;
+    padding: 6px 12px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.ui-button, .ui-input, .ui-select, .ui-textarea {
+    color: inherit;
+    font: inherit;
+    margin: 0;
+}
+.ui-form-control::-moz-placeholder {
+    color: #999;
+    opacity: 1;
+}
+.ui-form-horizontal .ui-checkbox, .ui-form-horizontal .ui-radio {
+    min-height: 27px;
+}
+.ui-form-horizontal .ui-checkbox, .ui-form-horizontal .ui-checkbox-inline, .ui-form-horizontal .ui-radio, .ui-form-horizontal .ui-radio-inline {
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-top: 7px;
+}
+.ui-form-vertical .ui-checkbox, .ui-form-vertical .ui-checkbox-inline, .ui-form-vertical .ui-radio, .ui-form-vertical .ui-radio-inline {
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-top: 7px;
+}
+.ui-checkbox, .ui-radio {
+    display: block;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    position: relative;
+}
+.ui-checkbox label, .ui-radio label {
+    cursor: pointer;
+	position : relative;
+    font-weight: 400;
+    margin-bottom: 0;
+    min-height: 20px;
+    /*padding-left: 20px;*/
+}
+.ui-form-control:focus {
+  border-color: #66afe9;
+  outline: 0;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+          box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+}
+
+
+ui-form-inline {
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857;
+}
+.ui-form-inline .ui-form-group {
+    display: inline-block;
+    margin-bottom: 0;
+    vertical-align: middle;
+	margin-right: 4px;
+}
+
+.ui-sr-only {
+    border: 0 none;
+    clip: rect(0px, 0px, 0px, 0px);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+.ui-form-inline .ui-form-control {
+    display: inline-block;
+    vertical-align: middle;
+    width: auto;
+}
+.ui-form-inline .checkbox, .ui-form-inline .radio {
+    display: inline-block;
+    margin-bottom: 0;
+    margin-top: 0;
+    vertical-align: middle;
+	margin-right: 4px;
+}
+
+.ui-form-table {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857;
+}
+
+.ui-form-table input {
+	padding : 4px;
+}
+
+.ui-form-table select, .ui-form-tabel textarea {
+	padding :3px;
+}
+
+.ui-form-table .checkbox, .ui-form-table .radio {
+    display: inline-block;
+    margin-bottom: 0;
+    margin-top: 0;
+    vertical-align: middle;
+}

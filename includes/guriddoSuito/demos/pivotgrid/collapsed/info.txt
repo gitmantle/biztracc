@@ -1,0 +1,2 @@
+Data can be colapsed when the pivot is initialized.
+This is controlled with groupCollapse property.

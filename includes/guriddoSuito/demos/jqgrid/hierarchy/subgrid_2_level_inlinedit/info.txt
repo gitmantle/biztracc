@@ -1,0 +1,2 @@
+Inline edit in subgrid is possible like standard grid.
+Complete hierarchy is achieved in this example with just 1 lines of code - and additinal 1 file for the subgrid

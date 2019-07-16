@@ -1,0 +1,5 @@
+We have added grid option colMenu which if set to true will enable column menus on every grid colum header with different actions.
+
+With option colmenu in colModel to you can enable/disable the menu for particular column.
+
+With coloption property in colModel it is possible to enable/disable certain actions. 

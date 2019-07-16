@@ -1,0 +1,1 @@
+Searching is easy and it return the correct hierarchy data.

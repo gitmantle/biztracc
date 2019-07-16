@@ -1,0 +1,2 @@
+The search can be invoked dynamically upon grid load. Just set search to true and the criteria.
+The data of search can be saved in session to be used later when user come to this page.

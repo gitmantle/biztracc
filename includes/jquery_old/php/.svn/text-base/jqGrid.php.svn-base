@@ -1,0 +1,2356 @@
+<?php
+/**
+ * @author  Tony Tomov, (tony@trirand.com)
+ * @copyright TriRand Ltd
+ * @version 3.6.3
+ * @package jqGrid
+ * @license This product is licensed to Murray Russell <murray@drumgor.com>
+ *
+ * @abstract
+ * A PHP class to work with jqGrid jQuery plugin.
+ * The main purpose of this class is to provide the data from database to jqGrid,
+ * simple subgrid and export to excel. Also can be used for search provided
+ * from toolbarFiletr and searchGrid methods 
+ *
+ * How to use
+ *
+ * Note that the jqGrid object should be created in the html/php page with
+ * jsonReader set as jsonReader:{repeatitems:false}.
+ * or
+ * xmlReader set as xmlReader:{repeatitems:false}.
+ * Optional in the reader a id row can be set, but we prefer to set it in colModel
+ * using the parameter key:true
+ *
+ * Using table
+ *
+ * require_once 'jqGridPdo.php';
+ * $dsn = "mysql:host=localhost;dbname=griddemo";
+ * $db = new PDO($dsn, 'username', 'password');
+ *
+ * $mygrid = new jqGrid($db);
+ * $mygrid->table = "invoices";
+ * $mygrid->queryGrid();
+ *
+ * Using custom SQL
+ *
+ * $mygrid = new jqGrid($db);
+ * $mygrid->SelectCommand ="SELECT * FROM invoices";
+ * $mygrid->queryGrid();
+ *
+ * Using xml file where the sql commands are stored
+ *
+ * $mygrid = new jqGrid($db);
+ * $mygrid->readFromXML = true
+ * $mygrid->SelectCommand ="xmlfile.getInvoiceTable";
+ * $mygrid->queryGrid();
+ *
+ * Using summary fields. Note that in this case in jqGrid footerrow and
+ * userDataOnFooter should be set
+ *
+ * $mygrid = new jqGrid($db);
+ * $mygrid->table = "invoices";
+ * $mygrid->queryGrid(array("amount"=>"amount");
+ */
+class jqGrid
+{
+    /**
+     *
+     * Stores the connection passed to the constructor
+     * @var resourse
+     */
+    protected $pdo;
+    /**
+     * Used to perform case insensitive search in PostgreSQL. The variable is
+     * detected automatically depending on the griver from jqGrid{driver}.php
+     * @var string
+     */
+	protected $I = '';
+    /**
+     * This is detected automatically from the passed connection. Used to
+     * construct the appropriate pagging for the database and in case of
+     * PostgreSQL to set case insensitive search
+     * @var string
+     */
+	protected $dbtype;
+    /**
+     *
+     * Holds the modified select command used into grid
+     * @var string
+     */
+    protected $select="";
+    /**
+     *
+     * Date format accepted in the database. See getDbDate
+     * and setDbDate and datearray. Also this format is used to automatically
+     * convert the date for CRUD and search operations
+     * @var string 
+     */
+	protected $dbdateformat = 'Y-m-d';
+    /**
+     *
+     * Datetime format accepted in the database. See getDbTime
+     * and setDbTime and datearray. Also this format is used to automatically
+     * convert the date for CRUD and search operations
+     * @var string
+     */
+	protected $dbtimeformat = 'Y-m-d H:i:s';
+    /**
+     * The date format used by the user when a search is performed and CRUD operation
+     * See setUserDate and getUserDate. Also this format is used to automatically convert the date
+     * passed from grid to database. Used in CRUD operations and search
+     * @var string 
+     */
+	protected $userdateformat = 'd/m/Y';
+    /**
+     *
+     * The datetime format used by the user when a search is performed and CRUD operation
+     * See setUserTime and getUserTime. Also this format is used to automatically convert the datetime
+     * passed from grid to database. Used in CRUD operations and search
+     * @var string
+     */
+	protected $usertimeformat = 'd/m/Y H:i:s';
+	/*
+	 * Array that holds the the current log
+	 */
+	protected static $queryLog = array();
+	/**
+	 * Log query
+	 *
+	 * @param string $sql
+	 * @param array $data
+	 * @param array $types
+	 */
+	public function logQuery($sql, $data = null, $types=null, $input= null, $fld=null, $primary='')
+	{
+		self::$queryLog[] = array(
+			'time' => date('Y-m-d H:i:s'),
+			'query' => $sql,
+			'data' => $data,
+			'types'=> $types,
+			'fields' => $fld,
+			'primary' => $primary,
+			'input' => $input
+			);
+	}
+	/**
+	 * Enable disable debuging
+	 * @var boolean
+	 */
+	public $debug = false;
+	/**
+	 * Determines if the log should be written to file or echoed.
+	 * Ih set to created is a file jqGrid.log in the directory where the script is
+	 * @var boolean
+	 */
+	public $logtofile = true;
+	/**
+	 * Prints all executed SQL queries to file or console
+	 * @see $logtofile
+	 */
+	public function debugout()
+	{
+		if($this->logtofile) {
+			if( $fh = @fopen( "jqGrid.log", "a+" ) ) {
+				$the_string = "Executed ".count(self::$queryLog)." query(s) - ".date('Y-m-d H:i:s')."\n";
+				$the_string .= print_r(self::$queryLog,true);
+				fputs( $fh, $the_string, strlen($the_string) );
+				fclose( $fh );
+				return( true );
+			} else {
+				echo "Can not write to log!";
+			}
+		} else {
+			echo "<pre>\n";
+			print_r(self::$queryLog);
+			echo "</pre>\n";
+		}
+	}
+
+    /**
+     * Holds the parameters that are send from the grid to the connector.
+	 * Correspond to the prmNames in jqGrid Java Script lib
+	 * @todo these parameters should be changed according to the jqGrid js
+     * @var array 
+     */
+    protected $GridParams = array(
+        "page" => "page",
+        "rows" => "rows",
+        "sort" => "sidx",
+        "order" => "sord",
+        "search" => "_search",
+		"nd" => "nd",
+		"id" => "id",
+        "filter" => "filters",
+        "searchField" => "searchField",
+        "searchOper" => "searchOper",
+        "searchString" => "searchString",
+        "oper" => "oper",
+        "query" => "grid",
+        "addoper" => "add",
+        "editoper" => "edit",
+        "deloper" => "del",
+        "excel" => "excel",
+        "subgrid"=>"subgrid"
+    );
+    /**
+     * The output format for the grid. Can be json or xml
+     * @var string the 
+     */
+    public $dataType = "xml";
+    /**
+     * Default enconding passed to the browser
+     * @var string
+     */
+    public $encoding ="utf-8";
+    /**
+     * If set to true uses the PHP json_encode if available. If this is set to
+     * false a custom encode function in jqGrid is used. Also use this to false
+     * if the encoding of your database is not utf-8
+	 * @deprecated this not needed anymore also the related option is $encoding
+     * @var boolean
+     */
+    public $jsonencode = true;
+    /**
+     * Store the names which are dates. The name should correspond of the name
+     * in colModel. Used to perform the conversion from userdate and dbdate
+     * @var array 
+     */
+	public $datearray = array();
+    /**
+     * In case if no table is set, this holds the sql command for
+     * retrieving the data from the db to the grid
+     * @var string
+     */
+    public $SelectCommand = "";
+    /**
+     *
+     * Set the sql command for excel export. If not set a _setSQL
+     * function is used to set a sql for export
+     * @see _setSQL
+     * @var string
+     */
+    public $ExportCommand = "";
+    /**
+     * Maximum number of rows to be exported for the excel export
+     * @var integer 
+     */
+    public $gSQLMaxRows = 1000;
+    /**
+     * Set a sql command used for the simple subgrid
+     * @var string
+     */
+    public $SubgridCommand = "";
+    /**
+     * set a table to display a data to the grid
+     * @var string
+     */
+    public $table = "";
+    /**
+     *
+     * Obtain the SQL qurery from XML file.
+     * In this case the SelectCommand should be set as xmlfile.sqlid.
+     * The xmlfile is the name of xml file where we store the sql commands,
+     * sqlid is the id of the required sql.
+     * The simple xml file can look like this
+     * < ?xml version="1.0" encoding="UTF-8"?>
+     * <queries>
+     * <sql Id="getUserById">
+     *   Select *
+     *   From users
+     *   Where Id = ?
+     *   </sql>
+     *  <sql Id="validateUser">
+     *   Select Count(Id)
+     *   From users
+     *   Where Email = ? AND Password = ?
+     *  </sql>
+     * </queries>
+     * Important note: The class first look for readFromXML, then for
+     * selectCommand and last for a table.
+     * @var boolean
+     */
+	public $readFromXML = false;
+    /**
+     *
+     * Constructor
+     * @param resource -  $db the database connection passed to the constructor
+     */
+    function __construct($db=null)
+	{
+        if(class_exists('jqGridDB'))
+            $interface = jqGridDB::getInterface();
+        else
+            $interface = 'local';
+        $this->pdo = $db;
+        if($interface == 'pdo')
+        {
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->dbtype = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    		if($this->dbtype == 'pgsql') $this->I = 'I';
+        } else {
+            $this->dbtype = $interface;
+        }
+    }
+    /**
+     * Prepares a $sqlElement and binds a parameters $params
+     * Return prepared sql statement
+     * @param string $sqlElement sql to be prepared
+     * @param array $params - parameters passed to the sql
+     * @return string
+     */
+    protected function parseSql($sqlElement, $params, $bind=true)
+    {
+        $sql = jqGridDB::prepare($this->pdo,$sqlElement, $params, $bind);
+        return $sql;
+    }
+    /**
+     * Executes a prepared sql statement. Also if limit is set to true is used
+     * to return limited set of records
+     * Return true on success
+     * @param string $sqlId - sql to pe executed
+     * @param array $params - array of values which are passed as parameters
+     * to the sql
+     * @param resource $sql - pointer to the constructed sql
+     * @param boolean $limit - if set to true we use a pagging mechanizm
+     * @param integer $nrows - number of rows to return
+     * @param integer $offset - the offset from which the nrows should be returned
+     * @return boolean
+     */
+    protected function execute($sqlId, $params, &$sql, $limit=false,$nrows=-1,$offset=-1)
+    {
+        $this->select= $sqlId;
+        if($limit) {
+            $this->select = jqGridDB::limit($this->select, $this->dbtype, $nrows,$offset );
+        }
+		if($this->debug) $this->logQuery($this->select, $params);
+        $sql = $this->parseSql($this->select, $params);
+        if($sql)
+            return jqGridDB::execute($sql);
+        else
+            return false;
+    }
+    /**
+     * Read a xml file and the SelectCommand and return the sql string
+     * Return string if the query is found false if not.
+     * @param string $sqlId the string of type xmlfile.sqlId
+     * @return mixed
+     */
+    protected function getSqlElement($sqlId)
+    {
+        $tmp = explode('.', $sqlId);
+        $sqlFile = trim($tmp[0]) . '.xml';
+        if(file_exists($sqlFile)) {
+            $root = simplexml_load_file($sqlFile);
+            foreach($root->sql as $sql)
+            {
+                if ($sql['Id'] == $tmp[1])
+                return $sql;
+            }
+        }
+        return false;
+    }
+    /**
+     * Returns object which holds the total records in the query and optionally
+     * the sum of the records determined in sumcols
+     * @param string $sql - string to be parsed
+     * @param array $params - parameters passed to the sql query
+     * @param array $sumcols - array which holds the sum of the setted rows.
+     * The array should be associative where the index corresponds to the names
+     * of colModel in the grid, and the value correspond to the actual name in
+     * the query
+     * @return object
+     */
+    protected function _getcount($sql, array $params=null, array $sumcols=null)
+    {
+    	$qryRecs->COUNT = 0;
+        $s ='';
+    	if(is_array($sumcols) && !empty($sumcols)) {
+            foreach($sumcols as $k=>$v) {
+                if(is_array($v)) {
+                    foreach($v as $dbfield=>$oper){
+                        $s .= ",".trim($oper)."(".$dbfield.") AS ".$k;
+                    }
+                } else {
+                    $s .= ",SUM(".$v.") AS ".$k;
+                }
+            }
+        }
+    	if (preg_match("/^\s*SELECT\s+DISTINCT/is", $sql) ||
+            preg_match('/\s+GROUP\s+BY\s+/is',$sql) ||
+            preg_match('/\s+UNION\s+/is',$sql)) {
+    		// ok, has SELECT DISTINCT or GROUP BY so see if we can use a table alias
+    		// but this is only supported by oracle and postgresql... and at end in mysql5
+                //if($this->dbtype == 'pgsql' )
+                $rewritesql = "SELECT COUNT(*) AS COUNT ".$s." FROM ($sql) gridalias";
+                //else $rewritesql = "SELECT COUNT(*) AS COUNT ".$s." FROM ($sql)";
+    	} else {
+    		// now replace SELECT ... FROM with SELECT COUNT(*) FROM
+    		$rewritesql = preg_replace('/^\s*SELECT\s.*\s+FROM\s/Uis','SELECT COUNT(*) AS COUNT '.$s.' FROM ',$sql);
+    	}
+
+    	if (isset($rewritesql) && $rewritesql != $sql) {
+    		if (preg_match('/\sLIMIT\s+[0-9]+/i',$sql,$limitarr)) $rewritesql .= $limitarr[0];
+    		$qryRecs = $this->queryForObject($rewritesql, $params, false);
+    		if ($qryRecs) return $qryRecs;
+    	}
+    	return $qryRecs;
+    }
+    /**
+     * Return the object from the query
+     * @param string $sqlId the sql to be queried
+     * @param array $params - parameter values passed to the sql
+     * @param boolean $fetchAll - if set to true fetch all records
+     * @return object 
+     */
+    protected function queryForObject($sqlId, $params, $fetchAll=false)
+    {
+        $sql = null;
+        $ret = $this->execute($sqlId, $params, $sql, false);
+        if ($ret === true) {
+            $ret = jqGridDB::fetch_object($sql,$fetchAll,$this->pdo);
+            jqGridDB::closeCursor($sql);
+            return $ret;
+        } else
+            return $ret;
+    }
+    /**
+     * Builds the search where clause when the user perform a search
+     * Return arrray the first element is a strinng with the where clause,
+     * the second element is array containing the value parameters passed to
+     * the sql.
+     * @param string $sqlEx - the sql on which a serch should be applied
+     * @param array $prm - parameters passed to the sql
+     * @return array
+     */
+    protected function _buildSearch($sqlEx, array $prm=null)
+    {
+        $s = '';$s1=''; $i_ = $this->I;
+        $sopt = array('eq' => "=",'ne' => "<>",'lt' => "<",'le' => "<=",'gt' => ">",'ge' => ">=",'bw'=>" {$i_}LIKE ",'bn'=>" NOT {$i_}LIKE ",'in'=>' IN ','ni'=> ' NOT IN','ew'=>" {$i_}LIKE ",'en'=>" NOT {$i_}LIKE ",'cn'=>" {$i_}LIKE ",'nc'=>" NOT {$i_}LIKE ");
+        //if(preg_match("/WHERE/i",$sqlEx)) $s1 = " AND ( ";
+        //else
+		$s1 = " ( ";
+        $filters = jqGridUtils::GetParam($this->GridParams["filter"], "");
+        // multiple filter
+        if($filters) {
+            if( function_exists('json_decode') && strtolower(trim($this->encoding)) == "utf-8" )
+                $jsona = json_decode($filters,true);
+            else
+                $jsona = jqGridUtils::decode($filters);
+            if(is_array($jsona)) {
+                $gopr = $jsona['groupOp'];
+                $rules = $jsona['rules'];
+            }
+        // single filter
+        } else if (jqGridUtils::GetParam($this->GridParams['searchField'],'')){
+            $gopr = '';
+            $rules[0]['field'] = jqGridUtils::GetParam($this->GridParams['searchField'],'');
+            $rules[0]['op'] = jqGridUtils::GetParam($this->GridParams['searchOper'],'');
+            $rules[0]['data'] = jqGridUtils::GetParam($this->GridParams['searchString'],'');
+        }
+        $i = 0;
+        if(!$rules) return array('',$prm);
+        if(!is_array($prm)) $prm = array();
+        foreach($rules as $key=>$val) {
+            $field = $val['field'];
+            $op = $val['op'];
+            $v = $val['data'];
+			if(strlen($v) != 0   && $op ) {
+				if(in_array($field,$this->datearray)){
+					$v = jqGridUtils::parseDate($this->userdateformat,$v,$this->dbdateformat);
+				}
+	            $i++;
+                $s .= $i == 1 ? "" : " ".$gopr." ";
+                switch ($op)
+                {
+                    case 'bw':
+                    case 'bn':
+                        $s .= $field.$sopt[$op]." ?";
+                        $prm[] = "$v%";
+                        break;
+                    case 'ew':
+                    case 'en':
+                        $s .= $field.$sopt[$op]." ?";
+                        $prm[] = "%$v";
+                        break;
+                    case 'cn':
+                    case 'nc':
+                        $s .= $field.$sopt[$op]." ?";
+                        $prm[] = "%$v%";
+                        break;
+                    case 'in':
+                    case 'ni':
+                        $s .= $field.$sopt[$op]."( ?)";
+                        $prm[] = $v;
+                        break;
+                    default :
+                        $s .= $field.$sopt[$op]." ?";
+                        $prm[] = $v;
+                        break;
+                }
+			}
+        }
+        $s = $s ? $s1.$s." )" : "";
+        return array($s,$prm);
+    }
+    /**
+     * Bulid the sql based on $readFromXML, $SelectCommand and $table variables
+     * The logic is: first we look if readFromXML is set to true, then we look for
+     * SelectCommand and at end if none of these we use the table varable
+     * Return string or false if the sql found
+     * @return mixed
+     */
+	protected function _setSQL()
+	{
+        $sqlId = false;
+        if($this->readFromXML==true && strlen($this->SelectCommand) > 0 ){
+			$sqlId = $this->getSqlElement($this->SelectCommand);
+		} else if($this->SelectCommand && strlen($this->SelectCommand) > 0) {
+            $sqlId = $this->SelectCommand;
+        } else if($this->table && strlen($this->table)>0) {
+			$sqlId = "SELECT * FROM ".(string)$this->table;
+		}
+		return $sqlId;
+	}
+    /**
+     * Return the current date format used from the client
+     * @return string
+     */
+    public function getUserDate()
+    {
+        return $this->userdateformat;
+    }
+    /**
+     * Set a new user date format using PHP convensions
+     * @param string $newformat - the new format
+     */
+    public function setUserDate($newformat)
+    {
+        $this->userdateformat = $newformat;
+    }
+    /**
+     * Return the current datetime format used from the client
+     * @return string 
+     */
+    public function getUserTime()
+    {
+        return $this->usertimeformat;
+    }
+    /**
+     * Set a new user datetime format using PHP convensions
+     * @param string $newformat - the new format
+     */
+    public function setUserTime($newformat)
+    {
+        $this->usertimeformat = $newformat;
+    }
+    /**
+     * Return the current date format used in the undelayed database
+     * @return string 
+     */
+    public function getDbDate()
+    {
+        return $this->dbdateformat;
+    }
+    /**
+     * Set a new  database date format using PHP convensions
+     * @param string $newformat - the new database format
+     */
+    public function setDbDate($newformat)
+    {
+        $this->dbdateformat = $newformat;
+    }
+    /**
+     * Return the current datetime format used in the undelayed database
+     * @return string 
+     */
+    public function getDbTime()
+    {
+        return $this->dbtimeformat;
+    }
+    /**
+     * Set a new  database datetime format using PHP convensions
+     * @param string $newformat - the new database format
+     */
+    public function setDbTime($newformat)
+    {
+        $this->dbtimeformat = $newformat;
+    }
+    /**
+     *
+     * Return the associative array which contain the parameters
+     * that are sended from the grid to request, search, update delete data.
+     * @return array
+     */
+    public function getGridParams()
+    {
+        return $this->GridParams;
+    }
+    /**
+     * Set a grid parameters to identify the action from the grid
+     * Note that these should be set in the grid - i.e the parameters from the grid
+     * should equal to the GridParams.
+     * @param array $_aparams set new parameter.
+     */
+    public function setGridParams($_aparams)
+    {
+        if(is_array($_aparams) && !empty($_aparams)) {
+            $this->GridParams = array_merge($this->GridParams, $_aparams);
+        }
+    }
+    /**
+     * Will select, getting rows from $offset (1-based), for $nrows.
+	 * This simulates the MySQL "select * from table limit $offset,$nrows" , and
+	 * the PostgreSQL "select * from table limit $nrows offset $offset". Note that
+	 * MySQL and PostgreSQL parameter ordering is the opposite of the other.
+	 * eg. Also supports Microsoft SQL Server
+	 * SelectLimit('select * from table',3); will return rows 1 to 3 (1-based)
+     * SelectLimit('select * from table',3,2); will return rows 3 to 5 (1-based)
+     * Return object containing the limited record set
+     * @param string $limsql - optional sql clause
+     * @param integer is the number of rows to get
+     * @param integer is the row to start calculations from (1-based)
+     * @param array	array of bind variables
+     * @return object 
+     */
+    public function selectLimit($limsql='', $nrows=-1, $offset=-1, array $params=null)
+    {
+        $sql = null;
+		$sqlId = strlen($limsql)>0 ? $limsql : $this->_setSQL();
+        if(!$sqlId) return false;
+        $ret = $this->execute($sqlId, $params, $sql, true,$nrows,$offset);
+        if ($ret === true) {
+            $ret = jqGridDB::fetch_object($sql, true, $this->pdo);
+            jqGridDB::closeCursor($sql);
+            return $ret;
+        } else
+            return $ret;
+    }
+    /**
+     * Return the result of the query to jqGrid. Support searching
+     * @param array $summary - set which columns should be sumarized in order to be displayed to the grid
+     * By default this parameter uses SQL SUM function: array("colmodelname"=>"sqlname");
+     * It can be set to use the other one this way
+     * array("colmodelname"=>array("sqlname"=>"AVG"));
+     * By default the first field correspond to the name of colModel the second to
+     * the database name
+     * @param array $params - parameter values passed to the sql
+     * @param boolen $echo if set to false return the records as object, otherwiese json encoded or xml string
+     * depending on the dataType variable
+     * @return mixed
+     */
+    public function queryGrid( array $summary=null, array $params=null, $echo=true)
+    {
+		$sql = null;
+		$sqlId = $this->_setSQL();
+        if(!$sqlId) return false;
+        $page = $this->GridParams['page'];
+        $page = (int)jqGridUtils::GetParam($page,'1'); // get the requested page
+        $limit = $this->GridParams['rows'];
+        $limit = (int)jqGridUtils::GetParam($limit,'20'); // get how many rows we want to have into the grid
+        $sidx = $this->GridParams['sort'];
+        $sidx = jqGridUtils::GetParam($sidx,''); // get index row - i.e. user click to sort
+        $sord = $this->GridParams['order'];
+        $sord = jqGridUtils::GetParam($sord,''); // get the direction
+        $search = $this->GridParams['search'];
+        $search = jqGridUtils::GetParam($search,'false'); // get the direction
+		$sord = preg_replace("/[^a-zA-Z0-9]/", "", $sord);
+		$sidx = preg_replace("/[^a-zA-Z0-9. _,]/", "", $sidx);
+        if($search == 'true') {
+            $sGrid = $this->_buildSearch($sqlId, $params);
+			$whr = $sGrid[0] ? " WHERE ".$sGrid[0] : "";
+            $sqlId = "SELECT * FROM (".$sqlId.") gridsearch".$whr;
+            $params = $sGrid[1];
+        }
+        $qryData = $this->_getcount($sqlId,$params,$summary);
+		if(!isset($qryData->count)) $qryData->count = null;
+		if(!isset($qryData->COUNT)) $qryData->COUNT = null;
+        $count = $qryData->COUNT ? $qryData->COUNT : ($qryData->count ?  $qryData->count : 0);
+		if( $count > 0 ) {
+			$total_pages = ceil($count/$limit);
+		} else {
+			$total_pages = 0;
+		}
+        if ($page > $total_pages) $page=$total_pages;
+		$start = $limit*$page - $limit; // do not put $limit*($page - 1)
+        if ($start<0) $start = 0;
+        if($this->dbtype == 'sqlsrv') {
+            $difrec = abs($start-$count);
+            if( $difrec < $limit)
+            {
+                $limit = $difrec;
+            }
+        }
+        if(is_array($summary)) {
+            unset($qryData->COUNT,$qryData->count);
+            foreach($qryData as $k=>$v) {
+                if ($v == null) $v = 0;
+                $result->userdata[$k] = $v;
+            }
+        }
+        $result->records = $count;
+        $result->page = $page;
+        $result->total = $total_pages;
+        // build serch before order clause
+        if($sidx) $sqlId .= " ORDER BY ".$sidx." ".$sord;
+        $ret = $this->execute($sqlId, $params, $sql, true,$limit,$start);
+        if ($ret === true) {
+            $result->rows = jqGridDB::fetch_object($sql, true, $this->pdo);
+            jqGridDB::closeCursor($sql);
+            if($echo){
+                $this->_gridResponse($result);
+            } else {
+                return $result;
+            }
+        } else {
+            echo "Could not execute query!!!";
+        }
+		if($this->debug) $this->debugout();
+    }
+    /**
+     * Export the recordset to excel xml file.
+     * Can use the ExportCommand. If this command is not set uses _setSQL to set the query.
+     * The number of rows exported is limited from gSQLMaxRows variable
+     * @see _setSQL
+     * @param array $summary - set which columns should be sumarized in order to be displayed to the grid
+     * By default this parameter uses SQL SUM function: array("colmodelname"=>"sqlname");
+     * It can be set to use the other one this way
+     * array("colmodelname"=>array("sqlname"=>"AVG"));
+     * By default the first field correspond to the name of colModel the second to
+     * the database name
+     * @param array $params parameter values passed to the sql array(value)
+     * @param array $colmodel - different description for the headers - see rs2excel
+     * @param boolean $echo determines if the result should be returned or echoed
+     * @param string $filename the filename to which the sheet can be saved in case if $echo is true
+     * @return string
+     */
+    public function exportToExcel(array $summary=null,array $params=null, array $colmodel=null,$echo = true, $filename='exportdata.xls')
+    {
+		$sql = null;
+        if($this->ExportCommand && strlen($this->ExportCommand)>0 ) $sqlId = $this->ExportCommand;
+		else $sqlId = $this->_setSQL();
+        if(!$sqlId) return false;
+
+        $sidx = $this->GridParams['sort'];
+        $sidx = jqGridUtils::GetParam($sidx, ''); // get index row - i.e. user click to sort
+        $sord = $this->GridParams['order'];
+        $sord = jqGridUtils::GetParam($sord,''); // get the direction
+        $search = $this->GridParams['search'];
+        $search = jqGridUtils::GetParam($search,'false'); // get the direction
+		$sord = preg_replace("/[^a-zA-Z0-9]/", "", $sord);
+		$sidx = preg_replace("/[^a-zA-Z0-9._,]/", "", $sidx);
+
+        if($search == 'true') {
+            $sGrid = $this->_buildSearch($sqlId, $params);
+            $sqlId = "SELECT * FROM (".$sqlId.") gridsearch WHERE ".$sGrid[0];
+            $params = $sGrid[1];
+        }
+        if($sidx) $sqlId .= " ORDER BY ".$sidx." ".$sord;
+        $ret = $this->execute($sqlId, $params, $sql, true, $this->gSQLMaxRows, 0);
+        if ($ret === true) {
+            $ret = $this->rs2excel($sql, $colmodel, $echo, $filename, $summary);
+            jqGridDB::closeCursor($sql);
+            return $ret;
+        }
+        else
+            return "Error:Could not execute the query";
+    }
+    /**
+     *
+     * Return the result of the query for the simple subgrid
+     * The format depend of dataType variable
+     * @param array $params parameters passed to the query
+	 * @param boolean $echo if set to false return object containing the data
+     */
+    public function querySubGrid($params, $echo=true)
+    {
+        if($this->SubgridCommand && strlen($this->SubgridCommand)>0) {
+            $result->rows = $this->queryForObject($this->SubgridCommand, $params,true);
+			if($echo)
+				$this->_gridResponse($result);
+			else
+				return $result;
+        }
+    }
+    /**
+     *
+     * Check in which format data should be returned to the grid based on dataType property
+     * Add the appropriate headers and echo the result
+     * @param string $response can be xml or json
+     */
+    protected function _gridResponse($response)
+    {
+        if($this->dataType=="xml")
+        {
+            if(isset($response->records)) {
+                $response->rows["records"]= $response->records;
+                unset($response->records);
+            }
+            if(isset($response->total)) {
+                $response->rows["total"]= $response->total;
+                unset($response->total);
+            }
+            if(isset($response->page)) {
+                $response->rows["page"]= $response->page;
+                unset($response->page);
+            }
+    		if ( stristr($_SERVER["HTTP_ACCEPT"],"application/xhtml+xml") )
+            {
+            	header("Content-type: application/xhtml+xml;charset=",$this->encoding);
+            } else {
+          		header("Content-type: text/xml;charset=".$this->encoding);
+            }
+			echo jqGridUtils::toXml($response,'root', null, $this->encoding );
+        } else if ($this->dataType=="json") {
+            header("Content-type: text/x-json;charset=".$this->encoding);
+            if(function_exists('json_encode') && strtolower($this->encoding) == 'utf-8') {
+                echo json_encode($response);
+            } else {
+                echo jqGridUtils::encode($response);
+            }
+        }
+    }
+    /**
+     *
+     * From a given recordset returns excel xml file. If the summary array is
+     * defined add summary formula at last row.
+     * Return well formated xml excel string
+     * @param pdo recordset $rs recordset from pdo execute command
+     * @param array $colmodel diffrent descriptions for the headars, width, hidden cols
+     * This array is actually a colModel array in jqGrid.
+     * The array can look like
+     * Array(
+     *      [0]=>Array("label"=>"Some label", "width"=>100, "hidden"=>true, "name"=>"client_id", "formatter"=>"select", editoptions=>...),
+     *      [1]=>Array("label"=>"Other label", "width"=>80, "hidden"=>false, "name"=>"date",... ),
+     *      ...
+     * )
+     * @param boolean $echo determines if the result should be send to browser or returned as string
+     * @param string $filename filename to which file can be saved
+     * @param array $summary - set which columns should be sumarized in order to be displayed to the grid
+     * By default this parameter uses SQL SUM function: array("colmodelname"=>"sqlname");
+     * It can be set to use the other one this way
+     * array("colmodelname"=>array("sqlname"=>"AVG"));
+     * By default the first field correspond to the name of colModel the second to
+     * the database name
+     * @return string
+     */
+    protected function rs2excel($rs, $colmodel=false, $echo = true, $filename='exportdata.xls', $summary=false)
+    {
+        $s ='';$rows=0;
+        $gSQLMaxRows = $this->gSQLMaxRows; // max no of rows to download
+
+        if (!$rs) {
+            printf('Bad Record set rs2excel');
+            return false;
+        }
+        $typearr = array();
+        $ncols = jqGridDB::columnCount($rs);
+        $hdr = "<?xml version='1.0' encoding='".$this->encoding."'?>\n";
+        //  $hdr .= "<ss:Workbook xmlns:ss='urn:schemas-microsoft-com:office:spreadsheet'>\n";
+        $hdr .=  "<Workbook xmlns='urn:schemas-microsoft-com:office:spreadsheet' xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:x='urn:schemas-microsoft-com:office:excel' xmlns:ss='urn:schemas-microsoft-com:office:spreadsheet' xmlns:html='http://www.w3.org/TR/REC-html40'>\n";
+
+        // bold the header
+        $hdr .= "<ss:Styles>"
+            // header style
+            ."<ss:Style ss:ID='1'>\n<ss:Font ss:Bold='1'/>\n</ss:Style>"
+            // Short date style
+            ."<ss:Style ss:ID='sd'>\n<NumberFormat ss:Format='Short Date'/>\n</ss:Style>\n"
+            // long date format
+            ."<ss:Style ss:ID='ld'>\n<NumberFormat ss:Format='General Date'/>\n</ss:Style>\n"
+            // numbers
+            ."<ss:Style ss:ID='nmb'>\n<NumberFormat ss:Format='General Number'/>\n</ss:Style>\n"
+            ."</ss:Styles>\n";
+            //define the headers
+        $hdr .= "<ss:Worksheet ss:Name='Sheet1'>\n";
+        $hdr .= "<ss:Table>\n";
+        // if we have width definition set it
+        $model = false;
+        if($colmodel && is_array($colmodel) && count($colmodel)== $ncols) {
+            $model = true;
+        }
+        $hdr1 = "<ss:Row ss:StyleID='1'>\n";
+        $aSum = array();
+        $aFormula = array();
+        $ahidden = array();
+        $aselect = array();
+		$hiddencount = 0;
+        for ($i=0; $i < $ncols; $i++) {
+            // hidden columns
+            $ahidden[$i] = ($model && isset($colmodel[$i]["hidden"])) ? $colmodel[$i]["hidden"] : false;
+            $aselect[$i] = false;
+            if($model && isset($colmodel[$i]["formatter"])) {
+                if($colmodel[$i]["formatter"]=="select") {
+                    $asl = $colmodel[$i]["editoptions"];
+                    if(isset($asl["value"]))  $aselect[$i] = $asl["value"];
+                }
+            }
+            if($ahidden[$i]) {
+				$hiddencount++;
+				continue;
+			}
+            // width
+            $column = ($model && isset($colmodel[$i]["width"])) ? (int)$colmodel[$i]["width"] : 0;
+            // pixel to point conversion
+            if( $column > 0 ) {$column = $column*72/96; $hdr .= "<ss:Column ss:Width='".$column."'/>"; }
+            else $hdr .= "<ss:Column ss:AutoFitWidth='1'/>";
+            //names
+            $field = array();
+            if($model) {
+                $fname = isset($colmodel[$i]["label"]) ? $colmodel[$i]["label"] : $colmodel[$i]["name"];
+                $field["name"] = $colmodel[$i]["name"];
+                $typearr[$i] = isset($colmodel[$i]["sorttype"]) ? $colmodel[$i]["sorttype"] : '';
+            } else {
+                $field = jqGridDB::getColumnMeta($i,$rs);
+                $fname = $field["name"];
+                $typearr[$i] = jqGridDB::MetaType($field, $this->dbtype);
+            }
+            if($summary && is_array($summary)) {
+                foreach($summary as $key => $val)
+                {
+                    if(is_array($val)) {
+                        foreach($val as $fld=>$formula) {
+                            if ($field["name"] == $key ){
+                                $aSum[] = $i-$hiddencount;
+                                $aFormula[] = $formula;
+                            }
+                        }
+                    } else {
+                        if ($field["name"] == $key ){
+                            $aSum[] = $i-$hiddencount;
+                            $aFormula[] = "SUM";
+                        }
+                    }
+                }
+            }
+            $fname = htmlspecialchars($fname);
+            if (strlen($fname)==0) $fname = '';
+            $hdr1 .= "<ss:Cell><ss:Data ss:Type='String'>$fname</ss:Data></ss:Cell>\n";
+        }
+        $hdr1 .= "</ss:Row>";
+        if (!$echo) $html = $hdr.$hdr1;
+
+        while ($r= jqGridDB::fetch_num($rs)) {
+            $s .= "<ss:Row>\n";
+            for ($i=0; $i < $ncols; $i++)
+            {
+                if($ahidden[$i]) continue;
+                $v = $r[$i];
+                if(is_array($aselect[$i])) {
+                    $v1 = $aselect[$i][$v];
+                    if($v1)  $v = $v1;
+                    $typearr[$i] = 'string';
+                }
+    			$type = $typearr[$i];
+        		switch($type) {
+            	case 'date':
+                	if(substr($v,0,4) == '0000' || empty($v) || $v=='NULL') {
+                    	$v='1899-12-31T00:00:00.000';
+    					$s .= "<ss:Cell ss:StyleID='sd'><ss:Data ss:Type='DateTime'>".$v."</ss:Data></ss:Cell>\n";
+        			} else if (!strpos($v,':')) {
+                        $v = str_replace(".000","",$v);
+            			$v .= "T00:00:00";
+                		$s .= "<ss:Cell ss:StyleID='sd'><ss:Data ss:Type='DateTime'>".$v.".000</ss:Data></ss:Cell>\n";
+                    } else {
+                        $v = str_replace(".000","",$v);
+    					$s .= "<ss:Cell ss:StyleID='sd'><ss:Data ss:Type='DateTime'>".str_replace(" ","T",trim($v)).".000</ss:Data></ss:Cell>\n";
+        			}
+            		break;
+                case 'datetime':
+    				if(substr($v,0,4) == '0000' || empty($v) || $v=='NULL') {
+        				$v = '1899-12-31T00:00:00.000';
+            			$s .= "<ss:Cell ss:StyleID='ld'><ss:Data ss:Type='DateTime'>".$v."</ss:Data></ss:Cell>\n";
+                	} else {
+                        $v = str_replace(".000","",$v);
+                    	$s .= "<ss:Cell ss:StyleID='ld'><ss:Data ss:Type='DateTime'>".str_replace(" ","T",trim($v)).".000</ss:Data></ss:Cell>\n";
+                    }
+                    break;
+                case 'numeric':
+                case 'int':
+                    $s .= "<ss:Cell ss:StyleID='nmb'><ss:Data ss:Type='Number'>".stripslashes((trim($v)))."</ss:Data></ss:Cell>\n";
+                    break;
+                default:
+                    $v = htmlspecialchars(trim($v));
+                    if (strlen($v) == 0) $v = '';
+                    $s .= "<ss:Cell><ss:Data ss:Type='String'>".stripslashes($v)."</ss:Data></ss:Cell>\n";
+                }
+            } // for
+            $s .= "</ss:Row>\n";
+
+            $rows += 1;
+            if ($rows >= $gSQLMaxRows) {
+                break;
+            } // switch
+        } // while
+        if(count($aSum)>0 && $rows > 0)
+        {
+            $s .= "<Row>\n";
+            foreach($aSum as $ind => $ival)
+            {
+                $s .= "<Cell ss:StyleID='1' ss:Index=\"".($ival+1)."\" ss:Formula=\"=".$aFormula[$ind]."(R[-".($rows)."]C:R[-1]C)\"><Data ss:Type=\"Number\"></Data></Cell>\n";
+            }
+            $s .= "</Row>\n";
+        }
+        if ($echo) {
+            header("Content-type: application/ms-excel");
+            header("Content-Disposition: attachment; filename=".$filename);
+			echo $hdr.$hdr1;
+			echo $s . "</ss:Table>\n</ss:Worksheet>\n</ss:Workbook>\n";
+		} else {
+			$html .= $s ."</ss:Table>\n</ss:Worksheet>\n</ss:Workbook>\n";
+			return $html;
+		}
+    }
+}
+
+/**
+ * @author  Tony Tomov, (tony@trirand.com)
+ * @copyright TriRand Ltd
+ * @package jqGrid
+ * @abstract
+ * This class extend the main jqGrid class and is used for CRUD operations.
+ * Can work on table. Also the table should have one primary key.
+ *
+ * Usage:
+ *
+ * 1.Suppose the table has a primary key and this key is serial (autoincrement)
+ *
+ * $mygrid new jqGridEdit($db);
+ * $mygrid->setTable('invoices');
+ * $mygrid->editGrid();
+ *
+ * In this case the parameter names - i.e names with : should correspond to the names
+ * in colModel in jqGrid definition.
+ */
+class jqGridEdit  extends jqGrid
+{
+   /**
+    * Field names and data types from the table
+    * @var array 
+    */
+    protected $fields = array();
+    /**
+    * Holds the primary key for the table
+    * @var string 
+    */
+    protected $primaryKey;
+    /**
+    * Defines if the primary key is serial (autoincrement)
+    * @var boolean 
+    */
+    public $serialKey = true;
+    /**
+    *
+    * Tell the class if the fields should be get from the query.
+    * If set to false the $fields array should be set manually in type
+    * $fields = array("dbfield1" => array("type"=>"integer")...);
+    * @var boolean
+    */
+	protected $buildfields = false;
+    /**
+    * If true every CRUD is enclosed within begin transaction - commit/rollback
+    * @var boolean 
+    */
+    public $trans = true;
+    /**
+     * Enables/disables adding of record into the table
+     * @var boolean
+     */
+    public $add = true;
+    /**
+     * Enables/disables updating of record into the table
+     * @var boolean
+     */
+    public $edit = true;
+    /**
+     * Enables/disables deleting of record into the table
+     * @var boolean
+     */
+    public $del = true;
+	/**
+	 * Determines the type of accepting the input data. Can be POST or GET
+	 * @var string
+	 */
+	public $mtype = "POST";
+	/**
+	 * Decodes the input for update and insert opeartions using the html_entity_decode
+	 * @var booolen 
+	 */
+	public $decodeinput = false;
+    /**
+    * Return the primary key of the table
+    * @return string
+    */
+    public function getPrimaryKeyId()
+    {
+		return $this->primaryKey;
+	}
+     /**
+    * Set a primary key for the table
+    * @param string $keyid 
+    */
+	public function setPrimaryKeyId($keyid)
+    {
+		$this->primaryKey = $keyid;
+	}
+    /**
+     * Set table for CRUD and build the fields
+     * @param string $_newtable 
+     *
+     */
+    public function setTable($_newtable)
+	{
+		$this->table= $_newtable;
+	}
+    /**
+     * Build the fields array with a database fields from the table.
+     * Also we get the fields types
+     * Return false if the fields can not be build.
+     * @return boolen 
+     */
+	protected function _buildFields()
+	{
+        if($this->table) {
+            if ($this->buildfields) return true;
+			$wh = ($this->dbtype == 'sqlite') ? "": " WHERE 1=2";
+            $sql = "SELECT * FROM ".$this->table.$wh;
+			if($this->debug) $this->logQuery($sql);
+            $select =  jqGridDB::query($this->pdo,$sql);
+            if($select) {
+                $colcount = jqGridDB::columnCount($select);
+                $rev = array();
+                for($i=0;$i<$colcount;$i++)
+                {
+                	$meta = jqGridDB::getColumnMeta($i, $select);
+                    $type = jqGridDB::MetaType($meta, $this->dbtype);
+                	$this->fields[$meta['name']] = array('type'=>$type);
+                }
+                jqGridDB::closeCursor($select);
+                $this->buildfields = true;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+	}
+    /**
+     * Return the fields generated for CRUD operations
+     * @return array 
+     */
+	public function getFields()
+    {
+		return $this->fields;
+	}
+    /**
+     *
+     * Insert the data array into the database according to the table element.
+     * A primaryKey should be set. If the key is not set It can be obtained
+     * from jqGridDB::getPrimaryKey
+     * Return true on succes, false otherwiese.
+     * @todo in the future we should return the last insert id from the table
+     * @param array $data associative array which key values correspond to the
+     * names in the table.
+     * @return boolean
+     */
+    public function insert($data)
+    {
+        if(!$this->add) return false;
+        if(!$this->_buildFields()) {
+            die("Could not insert - fields can not be build");
+        }
+		$datefmt = $this->userdateformat;
+		$timefmt = $this->usertimeformat;
+        if($this->serialKey) unset($data[$this->getPrimaryKeyId()]);
+        $tableFields = array_keys($this->fields);
+        $rowFields = array_intersect($tableFields, array_keys($data));
+		// Get "col = :col" pairs for the update query
+		$insertFields = array();
+		$binds = array();
+        $types = array();
+        $v ='';
+		foreach($rowFields as $key => $val)
+        {
+    		$insertFields[] = "?";
+            //$field;
+            $t = $this->fields[$val]["type"];
+            $value = $data[$val];
+            switch ($t) {
+                case 'date':
+                    $v = $datefmt != $this->dbdateformat ? jqGridUtils::parseDate($datefmt,$value,$this->dbdateformat) : $value;
+                    break;
+                case 'datetime' :
+                    $v = $timefmt != $this->dbtimeformat ? jqGridUtils::parseDate($timefmt,$value,$this->dbtimeformat) : $value;
+                    break;
+                case 'time':
+                    $v = jqGridUtils::parseDate($timefmt,$value,'H:i:s');
+                    break;
+                default :
+                    $v = $value;
+            }
+			if($this->decodeinput) $v = htmlspecialchars_decode($v);
+            $types[] = $t;
+            $binds[] = &$v;
+            unset($v);
+		}
+		$result = false;
+		if(count($insertFields) > 0) {
+			// build the statement
+            $sql = "INSERT INTO " . $this->table .
+				" (" . implode(', ', $rowFields) . ")" .
+				" VALUES( " . implode(', ', $insertFields) . ")";
+			// Prepare insert query
+			if($this->debug) $this->logQuery($sql, $binds, $types, $data, $this->fields, $this->primaryKey);
+            $stmt = $this->parseSql($sql, $binds, false);
+			if($stmt) {
+				// Bind values to columns
+				jqGridDB::bindValues($stmt, $binds, $types);
+
+				// Execute
+				if($this->trans) {
+                    jqGridDB::beginTransaction($this->pdo);
+                    $test = jqGridDB::execute($stmt);
+                    $result = true;
+                    if($test && $result)
+                    {
+                        $result = jqGridDB::commit($this->pdo);
+                    } else {
+                        jqGridDB::rollBack($this->pdo);
+                        $result = false;
+                    }
+				} else {
+                    $result = jqGridDB::execute($stmt);
+                }
+                jqGridDB::closeCursor($stmt);
+			} else {
+				$result = false;
+			}
+		} else {
+			$result = false;
+		}
+		if($this->debug) $this->debugout();
+		return $result;
+    }
+    /**
+     *
+     * Update the data into the database according the table element
+     * A primaryKey should be set. If the key is not set It can be obtained
+     * from jqGridDB::getPrimaryKey
+     * Return true on success, false when the operation is not succefull
+     * @todo possibility to set additional where clause
+     * @param array $data associative array which key values correspond to the
+     * names in the table
+     * @return boolean 
+     */
+	public function update($data)
+	{
+        if(!$this->edit) return false;
+        if(!$this->_buildFields()) {
+            die("Could not update - fields can not be build");
+        }
+
+        $datefmt = $this->userdateformat;
+		$timefmt = $this->usertimeformat;
+
+        $custom = false;
+
+        $tableFields = array_keys($this->fields);
+        $rowFields = array_intersect($tableFields, array_keys($data));
+        // Get "col = :col" pairs for the update query
+		$updateFields = array();
+		$binds = array();
+        $types = array();
+		$pk = $this->getPrimaryKeyId();
+		foreach($rowFields as $key => $field) {
+            $t = $this->fields[$field]["type"];
+            $value = $data[$field];
+            switch ($t) {
+                case 'date':
+                    $v = $datefmt != $this->dbdateformat ? jqGridUtils::parseDate($datefmt,$value,$this->dbdateformat) : $value;
+                    break;
+                case 'datetime' :
+    				$v = $timefmt != $this->dbtimeformat ? jqGridUtils::parseDate($timefmt,$value,$this->dbtimeformat) : $value;
+                    break;
+                case 'time':
+                    $v = jqGridUtils::parseDate($timefmt,$value,'H:i:s');
+                    break;
+                default :
+                        $v = $value;
+            }
+			if($this->decodeinput) $v = htmlspecialchars_decode($v);
+   			if($field != $pk ) {
+       			$updateFields[] = $field . " = ?";
+        		$binds[] = &$v;
+                $types[] = $t;
+            } else if($field == $pk) {
+                $v2 = $v;
+                $t2 = $t;
+            }
+            unset($v);
+		}
+        if(!isset($v2)) die("Primary value is missing");
+        $binds[] = &$v2;
+        $types[] = $t2;
+		$result = false;
+		if(count($updateFields) > 0) {
+			// build the statement
+            $sql = "UPDATE " . $this->table .
+				" SET " . implode(', ', $updateFields) .
+				" WHERE " . $pk . " = ?";
+			// Prepare update query
+
+			$stmt = $this->parseSql($sql, $binds, false);
+			if($this->debug) $this->logQuery($sql, $binds, $types, $data, $this->fields, $this->primaryKey);
+			if($stmt) {
+				// Bind values to columns
+				jqGridDB::bindValues($stmt, $binds, $types);
+				if($this->trans) {
+                    jqGridDB::beginTransaction($this->pdo);
+					$test = jqGridDB::execute($stmt);
+                    if($test) {
+                        $result = jqGridDB::commit($this->pdo);
+                        jqGridDB::closeCursor($stmt);
+                        } else {
+                       jqGridDB::rollBack($this->pdo);
+                       $result = false;
+                    }
+				} else {
+					$result = jqGridDB::execute($stmt);
+                    jqGridDB::closeCursor($stmt);
+                }
+			}
+		}
+		if($this->debug) $this->debugout();
+		return $result;
+	}
+    /**
+     *
+     * Delete the data into the database according the table element
+     * A primaryKey should be set. If the key is not set It can be obtained
+     * from jqGridDB::getPrimaryKey
+     * Return true on success, false when the operation is not succefull
+     * @todo possibility to set additional where clause
+     * @param array $data associative array which key values correspond to the
+     * names in the delete command
+     * @return boolean 
+     */
+	public function delete(array $data)
+	{
+		$result = false;
+        if(!$this->del) return $result;
+        //SQL Server hack
+        $ide = null;
+        $binds = array(&$ide);
+        $types = array();
+		if(count($data)>0) {
+            $id = $this->getPrimaryKeyId();
+            if(!isset($data[$id])) return $result;
+            $sql = "DELETE FROM ".$this->table." WHERE ".$id. "=?";
+			$stmt = $this->parseSql($sql, $binds, false);
+            $delids = explode(",",$data[$id]);
+            $types[0] = 'custom';
+			if($stmt) {
+				if($this->trans) {
+					jqGridDB::beginTransaction($this->pdo);
+                    foreach($delids as $i => $ide) {
+                        $delids[$i] = trim($delids[$i]);
+                        $binds[0] = &$delids[$i];
+						if($this->debug) $this->logQuery($sql, $binds, $types, $data, $this->fields, $this->primaryKey);
+                        jqGridDB::bindValues($stmt, $binds, $types);
+                        $test = jqGridDB::execute($stmt);
+                        if(!$test) {
+                            jqGridDB::rollBack($this->pdo);
+                            break;
+							$result = false;
+                        }
+                        unset($binds[0]);
+                    }
+                    if($test)
+                        $result = jqGridDB::commit($this->pdo);
+				} else {
+                    foreach($delids as $i => $ide) {
+                        $delids[$i] = trim($delids[$i]);
+                        $binds[0] = &$delids[$i];
+						if($this->debug) $this->logQuery($sql, $binds, $types, $data, $this->fields, $this->primaryKey);
+                        jqGridDB::bindValues($stmt, $binds, $types);
+                        $test = jqGridDB::execute($stmt);
+                        if(!$test) {
+                            break;
+							$result = false;
+                        }
+                        unset($binds[0]);
+                    }
+                    $result = true;
+                }
+                jqGridDB::closeCursor($stmt);
+			}
+		}
+		if($this->debug) $this->debugout();
+		return $result;
+	}
+    /**
+     * Perform the all CRUD operations depending on the oper param send from the grid
+     * and the table element
+     * If the primaryKey is not set we try to obtain it using jqGridDB::getPrimaryKey
+     * If the primary key is not set or can not be obtained the operation is aborted.
+     * Also the method call the queryGrid to perform the grid ouput
+     * @param array $summary - set which columns should be sumarized in order to be displayed to the grid
+     * By default this parameter uses SQL SUM function: array("colmodelname"=>"sqlname");
+     * It can be set to use the other one this way
+     * array("colmodelname"=>array("sqlname"=>"AVG"));
+     * By default the first field correspond to the name of colModel the second to
+     * the database name
+     * @param array $params additional parameters that can be passed to the query
+     * @param string $oper if set the requested oper operation is performed without to check
+     * the parameter sended from the grid.
+     */
+    public function editGrid(array $summary=null, array $params=null, $oper=false)
+    {
+        if(!$oper) {
+            $oper = $this->GridParams["oper"];
+            $oper = jqGridUtils::GetParam($oper,"grid");
+        }
+        switch ($oper)
+        {
+            case $this->GridParams["editoper"] :
+                    if(strlen($this->table)>0 && !$this->primaryKey) {
+                        $this->primaryKey = jqGridDB::getPrimaryKey($this->table, $this->pdo, $this->dbtype);
+                        if(!$this->primaryKey) die("could not determine primary key");
+                    }
+                    $data = strtolower($this->mtype)=="post" ? jqGridUtils::Strip($_POST) : jqGridUtils::Strip($_GET);
+                    $this->update($data);
+                break;
+            case $this->GridParams["addoper"] :
+                    if(strlen($this->table)>0 && !$this->primaryKey) {
+                        $this->primaryKey = jqGridDB::getPrimaryKey($this->table, $this->pdo, $this->dbtype);
+                        if(!$this->primaryKey) die("could not determine primary key");
+                    }
+                    $data = strtolower($this->mtype)=="post" ? jqGridUtils::Strip($_POST) : jqGridUtils::Strip($_GET);
+                    $this->insert($data);
+                break;
+            case $this->GridParams["deloper"] :
+                if(strlen($this->table)>0 && !$this->primaryKey) {
+                    $this->primaryKey = jqGridDB::getPrimaryKey($this->table, $this->pdo, $this->dbtype);
+                    if(!$this->primaryKey) die("could not determine primary key");
+                }
+				$data = strtolower($this->mtype)=="post" ? jqGridUtils::Strip($_POST) : jqGridUtils::Strip($_GET);
+                $this->delete($data);
+                break;
+            default :
+                $this->queryGrid($summary, $params);
+        }
+    }
+}
+/**
+ * 
+ * @author  Tony Tomov, (tony@trirand.com)
+ * @copyright TriRand Ltd
+ * @package jqGrid
+ * @abstract
+ * This is a top level class which do almost evething with the grid without to write
+ * Java Script code.
+ */
+class jqGridRender extends jqGridEdit
+{
+    /**
+     * Default grid parameters
+     * @var array 
+     */
+	protected $gridOptions = array(
+        "width"=>"650",
+        "hoverrows"=>false,
+		"viewrecords"=>true,
+		"jsonReader"=>array("repeatitems"=>false, "subgrid"=>array("repeatitems"=>false)),
+        "xmlReader"=>array("repeatitems"=>false, "subgrid"=>array("repeatitems"=>false)),
+		"gridview"=>true
+    );
+    /**
+     * Enable/disable navigator in the grid. Default false
+     * @var boolean 
+     */
+	public $navigator = false;
+    /**
+     * Enable/disable tollbar search. Default false
+     * @var boolean 
+     */
+    public $toolbarfilter = false;
+    /**
+     * Enable/disable the export to excel
+     * @var boolean
+     */
+    public $export = true;
+    /**
+     * Default navigaror options
+     * @var array 
+     */
+	protected $navOptions = array("edit"=>true,"add"=>true,"del"=>true,"search"=>true,"refresh"=>true, "view"=>false, "excel"=>true);
+    /**
+     * Default editing form dialog options
+     * @var array 
+     */
+	protected $editOptions = array("drag"=>true,"resize"=>true,"closeOnEscape"=>true, "dataheight"=>150);
+    /**
+     * Default add form dialog options
+     * @var array 
+     */
+	protected $addOptions = array("drag"=>true,"resize"=>true,"closeOnEscape"=>true, "dataheight"=>150);
+    /**
+     * Default view form dialog options
+     * @var array 
+     */
+	protected $viewOptions = array("drag"=>true,"resize"=>true,"closeOnEscape"=>true, "dataheight"=>150);
+    /**
+     * Default delete form dialog options
+     * @var array default 
+     */
+    protected $delOptions = array();
+    /**
+     * Default search options
+     * @var array 
+     */
+    protected $searchOptions = array("drag"=>true, "closeAfterSearch"=>true, "multipleSearch"=>true);
+    /**
+     * Default fileter toolbar search options
+     * @var array 
+     */
+    protected $filterOptions = array("stringResult"=>true);
+    /**
+     *
+     * Holds the colModel for the grid. Can be passed as param or created
+     * automatically
+     * @var array
+     */
+	protected $colModel = array();
+    /**
+     *
+     * When set to false some set comands are not executed for spped improvements
+     * Usual this is done after setColModel.
+     * @var boolen
+     */
+    protected $runSetCommands = true;
+    /**
+     * Holds the grid methods.
+     * @var array 
+     */
+    protected $gridMethods = array();
+    /**
+     * Custom java script code which is set after creation of the grid
+     * @var string 
+     */
+    protected $customCode = "";
+
+    /**
+     * Return the generated colModel
+     * @return array 
+     */
+	public function getColModel()
+	{
+		return $this->colModel;
+	}
+
+    /**
+     *
+     * Return a jqGrid option specified by the key, false if the option can not be found.
+     * @param string $key the named grid option
+     * @return mixed
+     */
+	public function getGridOption($key)
+	{
+		if(array_key_exists($key, $this->gridOptions)) return $this->gridOptions[$key];
+		else return false;
+	}
+
+    /**
+     *
+     * Set a grid option. The method uses array with keys corresponding
+     * to the jqGrid options as described in jqGrid docs
+     * @param array $aoptions A key name pair. Some options can be array to.
+     */
+	public function setGridOptions($aoptions)
+	{
+        if($this->runSetCommands) {
+            if(is_array($aoptions))
+                $this->gridOptions = jqGridUtils::array_extend($this->gridOptions,$aoptions);
+        }
+	}
+
+    /**
+     *
+     * Set a editing url. Note that this set a url from where to obtain and/or edit
+     * data.
+     * Return false if runSetCommands is already runned (false)
+     * @param string $newurl the new url
+     * @return boolean
+     */
+    public function setUrl($newurl)
+    {
+        if(!$this->runSetCommands) return false;
+        if(strlen($newurl) > 0)
+        {
+            $this->setGridOptions(array("url"=>$newurl,"editurl"=>$newurl, "cellurl"=>$newurl));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * Prepares a executuion of a simple subgrid
+     * Return false if no name options for the subgrid.
+     * @param string $suburl Url from where to get the data
+     * @param array $subnames Required - the names that should correspond to fields of the data
+     * @param array $subwidth (optional) - sets a width of the subgrid columns. Default 100
+     * @param array $subalign (optional) - set the aligmend of the columns. default center
+     * @param array $subparams (optional) additional parameters that can be passed when the subgrid
+     * plus icon is clicked. The names should be present in colModel in order to pass the values
+     * @return boolean
+     */
+    public function setSubGrid ($suburl='', $subnames=false, $subwidth=false, $subalign=false, $subparams=false)
+    {
+        if(!$this->runSetCommands) return false;
+        if($subnames && is_array($subnames)) {
+            $scount = count($subnames);
+            for($i=0;$i<$scount;$i++) {
+                if(!isset($subwidth[$i])) $subwidth[$i] = 100;
+                if(!isset($subalign[$i])) $subalign[$i] = 'center';
+            }
+            $this->setGridOptions(array("gridview"=>false,"subGrid"=>true,"subGridUrl"=>$suburl,"subGridModel"=>array(array("name"=>$subnames,"width"=>$subwidth,"align"=>$subalign,"params"=>$subparams))));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * Prepares a subgrid in the grid expecting any valid html content provieded
+     * via the $suggridurl
+     * @param string $suggridurl url from where to get html content
+     * @return boolean
+     */
+    public function setSubGridGrid($suggridurl)
+    {
+        if(!$this->runSetCommands) return false;
+        $this->setGridOptions(array("subGrid"=>true,"gridview"=>false));
+$subgr = <<<SUBGRID
+function(subgridid,id)
+{
+    $("#"+subgridid).load('$suggridurl',{subgrid:subgridid, rowid:id});
+}
+SUBGRID;
+        $this->setGridEvent('subGridRowExpanded', $subgr);
+        return true;
+    }
+
+    /**
+     *
+     * Construct the select used in the grid. The select element can be used in the
+     * editing modules, in formatter or in search module
+     * @param string $colname (requiered) valid colname in colmodel
+     * @param mixed $data can be array (with pair key value) or string which is
+     * the SQL command which is executed to obtain the values. The command should contain a
+     * minimun two fields. The first is the key and the second is the value whch will
+     * be displayed in the select
+     * @param boolean $formatter deternines that the select should be used in the
+     * formatter of type select. Default is true
+     * @param boolean $editing determines if the select should be used in editing
+     * modules. Deafult is true
+     * @param boolean $seraching determines if the select should be present in
+     * the search module. Deafult is true.
+     * @param array $defvals Set the default value if none is selected. Typically this
+     * is usefull in serch modules. Can be somethink like arrar(""=>"All");
+     * @return boolean
+     */
+    public function setSelect($colname, $data, $formatter=true, $editing=true, $seraching=true, $defvals=array() )
+    {
+        $s1 = array();
+        $prop = array();
+        $oper = $this->GridParams["oper"];
+        $goper = jqGridUtils::GetParam($oper,'nooper');
+        if(($goper == 'nooper' || $goper == $this->GridParams["excel"])) $runme = true;
+        else $runme = !in_array($goper, array_values($this->GridParams));
+        if(!$this->runSetCommands && !$runme) return false;
+
+        if(count($this->colModel) > 0 && $runme)
+        {
+            if(is_string($data))
+            {
+                $aset = jqGridDB::query($this->pdo,$data);
+                    //$this->pdo->query($data);
+                if($aset) {
+                    while($row = jqGridDB::fetch_num($aset))
+                    {
+
+                        $s1[$row[0]]= $row[1];
+                    }
+                    jqGridDB::closeCursor($aset);
+                }
+           } else if(is_array($data)) {
+               $s1 = $data;
+           }
+           if($editing)  {
+               $prop = array_merge( $prop,array('edittype'=>'select','editoptions'=>array('value'=>$s1)) );
+           }
+           if($formatter)
+           {
+               $prop = array_merge( $prop,array('formatter'=>'select','editoptions'=>array('value'=>$s1)) );
+           }
+           if($seraching) {
+               if(is_array($defvals) && count($defvals)>0) $s1 = $defvals+$s1;
+               $prop = array_merge( $prop,array("stype"=>"select","searchoptions"=>array("value"=>$s1)) );
+           }
+           if(count($prop)>0){
+               $this->setColProperty($colname, $prop);
+           }
+           return true;
+        }
+        return false;
+    }
+    /**
+     *
+     * Set a valid grid event
+     * @param string $event - valid grid event
+     * @param string $code Javascript code which will be executed when the event raises
+     * @return bolean
+     */
+	public function setGridEvent($event,$code)
+	{
+        if(!$this->runSetCommands) return false;
+        $this->gridOptions[$event] = "js:".$code;
+        return true;
+	}
+
+    /**
+     *
+     * Set options in the navigator for the diffrent actions
+     * @param string $module - can be navigator, add, edit, del, view
+     * @param array $aoptions options that are applicable to this module
+     * The key correspond to the options in jqGrid
+     * @return boolean
+     */
+	public function setNavOptions($module,$aoptions)
+    {
+        $ret = false;
+        if(!$this->runSetCommands) return $ret;
+        switch ($module)
+        {
+            case 'navigator' :
+                $this->navOptions = array_merge($this->navOptions,$aoptions);
+                $ret = true;
+                break;
+    		case 'add' :
+        		$this->addOptions = array_merge($this->addOptions,$aoptions);
+                $ret = true;
+            	break;
+    		case 'edit' :
+    			$this->editOptions = array_merge($this->editOptions,$aoptions);
+                $ret = true;
+    			break;
+    		case 'del' :
+    			$this->delOptions = array_merge($this->delOptions,$aoptions);
+                $ret = true;
+    			break;
+    		case 'search' :
+    			$this->searchOptions = array_merge($this->searchOptions,$aoptions);
+                $ret = true;
+    			break;
+    		case 'view' :
+    			$this->viewOptions = array_merge($this->viewOptions,$aoptions);
+                $ret = true;
+    			break;
+        }
+        return $ret;
+	}
+
+    /**
+     *
+     * Set a event in the navigator or in the diffrent modules add,edit,del,view, search
+     * @param string $module - can be navigator, add, edit, del, view
+     * @param string $event - valid event for the particular module
+     * @param string $code - javascript code to be executed when the event occur
+     * @return boolean
+     */
+    public function setNavEvent($module,$event,$code)
+	{
+        $ret = false;
+        if(!$this->runSetCommands) return $ret;
+		switch ($module)
+		{
+			case 'navigator' :
+				$this->navOptions[$event] = "js:".$code;
+                $ret = true;
+				break;
+			case 'add' :
+				$this->addOptions[$event] = "js:".$code;
+                $ret = true;
+				break;
+			case 'edit' :
+				$this->editOptions[$event] = "js:".$code;
+                $ret = true;
+				break;
+			case 'del' :
+				$this->delOptions[$event] = "js:".$code;
+                $ret = true;
+				break;
+			case 'search' :
+				$this->searchOptions[$event] = "js:".$code;
+                $ret = true;
+				break;
+    		case 'view' :
+    			$this->viewOptions[$event] = "js:".$code;
+                $ret = true;
+    			break;
+		}
+        return $ret;
+	}
+    /**
+     *
+     * Set options for the tolbar filter when enabled
+     * @param array $aoptions valid options for the filterToolbat
+     */
+	public function setFilterOptions($aoptions)
+	{
+        if($this->runSetCommands) {
+            if(is_array($aoptions))
+                $this->filterOptions = jqGridUtils::array_extend($this->filterOptions,$aoptions);
+        }
+	}
+    /**
+     * Construct a code for execution of valid grid method. This code is putted
+     * after the creation of the grid
+     * @param string $grid valid grid id should be putted as #mygrid
+     * @param string $method valid grid method
+     * @param array $aoptions contain the parameters passed to
+     * the method. Omit this parameter if the method does not have parameters
+     */
+    public function callGridMethod($grid, $method, array $aoptions=null)
+    {
+        if($this->runSetCommands) {
+            $prm = '';
+            if(is_array($aoptions) && count($aoptions) > 0)
+            {
+                $prm = jqGridUtils::encode($aoptions);
+                $prm = substr($prm, 1);
+                $prm = substr($prm,0, -1);
+                $prm = ",".$prm;
+            }
+            $this->gridMethods[] = "jQuery('".$grid."').jqGrid('".$method."'".$prm.");";
+        }
+    }
+    /**
+     * Put a javascript arbitrary code after all things are created. The method is executed
+     * only once when the grid is created.
+     * @param string $code - javascript to be executed
+     */
+    public function setJSCode($code)
+    {
+        if($this->runSetCommands)
+        {
+            $this->customCode = "js:".$code;
+        }
+    }
+    /**
+     * Construct the column model of the grid. The model can be passed as array
+     * or can be constructed from sql. See _setSQL() to determine which SQL is
+     * used. The method try to determine the primary key and if it is found is
+     * set as key:true to the appropriate field. If the primary key can not be
+     * determined set the first field as key:true in the colModel.
+     * Return true on success.
+     * @see _setSQL
+     * @param array $model if set construct the model ignoring the SQL command
+     * @param array $params if a sql command is used parametters passed to the SQL
+     * @param array $labels if this parameter is set it set the labels in colModel.
+     * The array should be associative which key value correspond to the name of
+     * colModel
+     * @return boolean
+     */
+	public function setColModel(array $model=null, array $params=null, array $labels=null)
+	{
+        $oper = $this->GridParams["oper"];
+        $goper = jqGridUtils::GetParam($oper,'nooper');
+        // excel, nooper, !(in_array....)
+        if(($goper == 'nooper' || $goper == $this->GridParams["excel"])) $runme = true;
+        else $runme = !in_array($goper, array_values($this->GridParams));
+        if($runme) {
+            if(is_array($model) && count($model)>0) {
+                $this->colModel = $model;
+                return true;
+            }
+            $sql = null;
+            $sqlId = $this->_setSQL();
+            if(!$sqlId) return false;
+			$nof = ($this->dbtype == 'sqlite') ? 1 : 0;
+			//$sql = $this->parseSql($sqlId, $params);
+            $ret = $this->execute($sqlId, $params, $sql, true, $nof, 0);
+			//$this->execute($sqlId, $params, $sql, $limit, $nrows, $offset)
+			//execute($sql);
+            if ($ret === true)
+            {
+                if(is_array($labels) && count($labels)>0) $names = true;
+                else $names = false;
+                $colcount = jqGridDB::columnCount($sql);
+                for($i=0;$i<$colcount;$i++) {
+                    $meta = jqGridDB::getColumnMeta($i,$sql);
+					if(strtolower($meta['name']) == 'jqgrid_row') continue; //Oracle
+                    if($names && array_key_exists($meta['name'], $labels))
+                        $this->colModel[] = array('label'=>$labels[$meta['name']], 'name'=>$meta['name'], 'index'=>$meta['name'], 'editable'=>true, 'sorttype'=> jqGridDB::MetaType($meta,$this->dbtype));
+                    else
+                        $this->colModel[] = array('name'=>$meta['name'], 'index'=>$meta['name'], 'editable'=>true, 'sorttype'=> jqGridDB::MetaType($meta,$this->dbtype));
+                }
+                if($this->primaryKey) $pk = $this->primaryKey;
+                else  {
+                    $pk = jqGridDB::getPrimaryKey($this->table, $this->pdo, $this->dbtype);
+                    $this->primaryKey = $pk;
+                }
+                if($pk) {
+                    $this->setColProperty($pk,array("key"=>true));
+                } else {
+                    $this->colModel[0] = array_merge($this->colModel[0],array("key"=>true));
+                }
+                jqGridDB::closeCursor($sql);
+
+            } else {
+                return false;
+            }
+        }
+        if($goper == $this->GridParams["excel"]) {
+            // notify all other set methods not to be executed
+            $this->runSetCommands = false;
+        } else if(!$runme) {
+            $this->runSetCommands = false;
+        }
+        return true;
+	}
+    /**
+     * Set a new property in the constructed colModel
+     * Return true on success.
+     * @param mixed $colname valid coulmn name or index in colModel
+     * @param array $aproperties the key name properties.
+     * @return boolean
+     */
+	public function setColProperty ( $colname, array $aproperties)
+	{
+        //if(!$this->runSetCommands) return;
+        $ret = false;
+    	if(!is_array($aproperties)) return $ret;
+        if(count($this->colModel) > 0 )
+        {
+            if(is_int($colname)) {
+                $this->colModel[$colname] = jqGridUtils::array_extend($this->colModel[$colname],$aproperties);
+                $ret = true;
+            } else {
+                foreach($this->colModel as $key=>$val)
+                {
+                    if($val['name'] == trim($colname))
+                    {
+                        $this->colModel[$key] = jqGridUtils::array_extend($this->colModel[$key],$aproperties);
+                        $ret = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return $ret;
+   	}
+    /**
+     * Add a column at the first or last position in the colModel and sets a certain
+     * properties to it
+     * @param array $aproperties data representing the column properties - including
+     * name, label...
+     * @param string $position can be first or last - defaulr is first
+     * @return boolean
+     */
+    public function addCol (array $aproperties, $position='last') {
+        if(!$this->runSetCommands) return false;
+        if(is_array($aproperties) && count($aproperties)>0) {
+            if(count($this->colModel) >0 ) {
+                if($position=='first')
+                {
+                    array_unshift($this->colModel, $aproperties);
+                } else {
+                    array_push($this->colModel, $aproperties);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Main main which do allmost everthing for the grid
+     * Construct the grid, perform CRUD operations, perform Query and serch operations,
+     * export to excel, set a jqGrid method, and javascript code
+     * @param string $tblelement the id of the table element to costrict the grid
+     * @param string $pager the id for the pager element
+     * @param boolean $script if set to true add a script tag before constructin the grid.
+     * @param array $summary - set which columns should be sumarized in order to be displayed to the grid
+     * By default this parameter uses SQL SUM function: array("colmodelname"=>"sqlname");
+     * It can be set to use other one this way :
+     * array("colmodelname"=>array("sqlname"=>"AVG"));
+     * By default the first field correspond to the name of colModel the second to
+     * the database name
+     * @param array $params parameters passed to the query
+     * @param boolean $createtbl if set to true the table element is created automatically
+     * from this method. Default is false
+     * @param boolean $createpg if set to true the pager element is created automatically
+     * from this script. Default false.
+     * @param boolean $echo if set to false the function return the string representing
+     * the grid
+     * @return mixed.
+     */
+	public function renderGrid($tblelement='', $pager='', $script=true, array $summary=null, array $params=null, $createtbl=false, $createpg=false, $echo=true)
+	{
+        $oper = $this->GridParams["oper"];
+        $goper = jqGridUtils::GetParam($oper,'nooper');
+
+        if($goper == $this->GridParams["excel"]) {
+            if(!$this->export) return false;
+            $this->exportToExcel($summary, $params, $this->colModel);
+        } else if(in_array($goper, array_values($this->GridParams)) ) {
+            $this->editGrid( $summary, $params, $goper);
+        } else {
+            if(!isset ($this->gridOptions["datatype"]) ) $this->gridOptions["datatype"] = $this->dataType;
+            $this->gridOptions['colModel'] = $this->colModel;
+            if(isset ($this->gridOptions['postData'])) $this->gridOptions['postData'] = jqGridUtils::array_extend($this->gridOptions['postData'], array($oper=>$this->GridParams["query"]));
+            else $this->setGridOptions(array("postData"=>array($oper=>$this->GridParams["query"])));
+            if(isset($this->primaryKey))  {
+				$this->GridParams["id"] = $this->primaryKey;
+            }
+			$this->setGridOptions(array("prmNames"=>$this->GridParams));
+            $s = '';
+            if($createtbl) {
+                $tmptbl = $tblelement;
+                if(strpos($tblelement,"#") === false) {
+                    $tblelement = "#".$tblelement;
+                } else {
+                    $tmptbl = substr($tblelement,1);
+                }
+                $s .= "<table id='".$tmptbl."'></table>";
+            }
+            if($createpg) {
+                $tmppg = $pager;
+                if(strpos($pager,"#") === false) {
+                    $pager = "#".$pager;
+                } else {
+                    $tmppg = substr($pager,1);
+                }
+                $s .= "<div id='".$tmppg."'></div>";
+            }
+            if(strlen($pager)>0) $this->setGridOptions(array("pager"=>$pager));
+			$this->editOptions['mtype'] = $this->mtype;
+			$this->addOptions['mtype'] = $this->mtype;
+			$this->delOptions['mtype'] = $this->mtype;
+            if($script) {
+                $s .= "<script type='text/javascript'>";
+                $s .= "jQuery(document).ready(function() {";
+            }
+            $s .= "jQuery('".$tblelement."').jqGrid(".jqGridUtils::encode($this->gridOptions).");";
+            if($this->navigator && strlen($pager)>0) {
+                $s .= "jQuery('".$tblelement."').jqGrid('navGrid','".$pager."',".jqGridUtils::encode($this->navOptions);
+                $s .= ",".jqGridUtils::encode($this->editOptions);
+                $s .= ",".jqGridUtils::encode($this->addOptions);
+                $s .= ",".jqGridUtils::encode($this->delOptions);
+                $s .= ",".jqGridUtils::encode($this->searchOptions);
+                $s .= ",".jqGridUtils::encode($this->viewOptions).");";
+                if($this->navOptions["excel"]==true)
+                {
+                    $eurl = $this->getGridOption('url');
+$exexcel = <<<EXCELE
+onClickButton : function(e)
+{
+    try {
+        jQuery("$tblelement").jqGrid('excelExport',{url:'$eurl'});
+    } catch (e) {
+        window.location= '$eurl?oper=excel';
+    }
+}
+EXCELE;
+                    $s .= "jQuery('".$tblelement."').jqGrid('navButtonAdd','".$pager."',{caption:'',title:'Export to Excel',".$exexcel."});";
+                }
+            }
+            // toolbar filter
+            if($this->toolbarfilter){
+                $s .= "jQuery('".$tblelement."').jqGrid('filterToolbar',".jqGridUtils::encode($this->filterOptions).");\n";
+            }
+            // grid methods
+            $gM = count($this->gridMethods);
+            if($gM>0) {
+                for($i=0; $i<$gM; $i++) {
+                    $s .= $this->gridMethods[$i]."\n";
+                }
+            }
+            //at end the custom code
+            if(strlen($this->customCode)>0)
+                $s .= jqGridUtils::encode($this->customCode);
+            if($script) $s .= " });</script>";
+            if($echo) {
+                echo $s;
+            }
+            return $echo ? "" : $s;
+        }
+	}
+}
+/**
+ * @author  Tony Tomov, (tony@trirand.com)
+ * @copyright TriRand Ltd
+ * @package jqGrid
+ * @abstract Helper functions for the jqGrid package
+ */
+class jqGridUtils
+{
+	/**
+	 * Function for converting to an XML document.
+	 * Pass in a multi dimensional array or object and this recrusively loops through and builds up an XML document.
+	 *
+	 * @param array $data
+	 * @param string $rootNodeName - what you want the root node to be - defaultsto data.
+	 * @param SimpleXMLElement $xml - should only be used recursively
+	 * @return string XML
+	 */
+	public static function toXml($data, $rootNodeName = 'root', $xml=null, $encoding='utf-8')
+	{
+		// turn off compatibility mode as simple xml throws a wobbly if you don't.
+		if (ini_get('zend.ze1_compatibility_mode') == 1)
+		{
+			ini_set ('zend.ze1_compatibility_mode', 0);
+		}
+
+		if ($xml == null)
+		{
+			$xml = simplexml_load_string("<?xml version='1.0' encoding='".$encoding."'?><$rootNodeName />");
+		}
+
+		// loop through the data passed in.
+		foreach($data as $key => $value)
+		{
+			// no numeric keys in our xml please!
+			if (is_numeric($key))
+			{
+				// make string key...
+                //return;
+				$key = "row";
+			}
+			// if there is another array or object found recrusively call this function
+			if (is_array($value) || is_object($value))
+			{
+				$node = $xml->addChild($key);
+				// recrusive call.
+				self::toXml($value, $rootNodeName, $node);
+			}
+			else
+			{
+				// add single node.
+                $value = htmlspecialchars($value);
+                $xml->addChild($key,$value);
+			}
+
+		}
+		// pass back as string. or simple xml object if you want!
+		return $xml->asXML();
+	}
+	/**
+	 * Quotes a javascript string.
+	 * After processing, the string can be safely enclosed within a pair of
+	 * quotation marks and serve as a javascript string.
+	 * @param string string to be quoted
+	 * @param boolean whether this string is used as a URL
+	 * @return string the quoted string
+	 */
+	public static function quote($js,$forUrl=false)
+	{
+		if($forUrl)
+			return strtr($js,array('%'=>'%25',"\t"=>'\t',"\n"=>'\n',"\r"=>'\r','"'=>'\"','\''=>'\\\'','\\'=>'\\\\'));
+		else
+			return strtr($js,array("\t"=>'\t',"\n"=>'\n',"\r"=>'\r','"'=>'\"','\''=>'\\\'','\\'=>'\\\\',"'"=>'\''));
+	}
+
+	/**
+	 * Encodes a PHP variable into javascript representation.
+	 *
+	 * Example:
+	 * <pre>
+	 * $options=array('key1'=>true,'key2'=>123,'key3'=>'value');
+	 * echo jqGridUtils::encode($options);
+	 * // The following javascript code would be generated:
+	 * // {'key1':true,'key2':123,'key3':'value'}
+	 * </pre>
+	 *
+	 * For highly complex data structures use {@link jsonEncode} and {@link jsonDecode}
+	 * to serialize and unserialize.
+	 *
+	 * @param mixed PHP variable to be encoded
+	 * @return string the encoded string
+	 */
+	public static function encode($value)
+	{
+		if(is_string($value))
+		{
+			if(strpos($value,'js:')===0)
+				return substr($value,3);
+			else
+				return '"'.self::quote($value).'"';
+		}
+		else if($value===null)
+			return "null";
+		else if(is_bool($value))
+			return $value?"true":"false";
+		else if(is_integer($value))
+			return "$value";
+		else if(is_float($value))
+		{
+			if($value===-INF)
+				return 'Number.NEGATIVE_INFINITY';
+			else if($value===INF)
+				return 'Number.POSITIVE_INFINITY';
+			else
+				return "$value";
+		}
+		else if(is_object($value))
+			return self::encode(get_object_vars($value));
+		else if(is_array($value))
+		{
+			$es=array();
+			if(($n=count($value))>0 && array_keys($value)!==range(0,$n-1))
+			{
+				foreach($value as $k=>$v)
+					$es[]='"'.self::quote($k).'":'.self::encode($v);
+				return "{".implode(',',$es)."}";
+			}
+			else
+			{
+				foreach($value as $v)
+					$es[]=self::encode($v);
+				return "[".implode(',',$es)."]";
+			}
+		}
+		else
+			return "";
+	}
+    /**
+     *
+     * Decodes json string to PHP array. The function is used
+     * when the encoding is diffrent from utf-8
+     * @param string $json string to decode
+     * @return array
+     */
+    public static function decode($json)
+    { 
+        $comment = false;
+        $out = '$x=';
+   
+        for ($i=0; $i<strlen($json); $i++)
+        {
+            if (!$comment)
+            {
+                if ($json[$i] == '{')        $out .= ' array(';
+                else if ($json[$i] == '}')    $out .= ')';
+                else if ($json[$i] == '[')        $out .= ' array(';
+                else if ($json[$i] == ']')    $out .= ')';
+                else if ($json[$i] == ':')    $out .= '=>';
+                else                         $out .= $json[$i];           
+            }
+            else $out .= $json[$i];
+            if ($json[$i] == '"')    $comment = !$comment;
+        }
+        eval($out . ';');
+        return $x;
+    }
+    /**
+     * Strip slashes from a varaible if PHP magic quotes are on
+     * @param mixed $value to be striped
+     * @return mixed
+     */
+    public static function Strip($value)
+    {
+        if(get_magic_quotes_gpc() != 0)
+        {
+            if(is_array($value))
+                // is associative array
+                if ( 0 !== count(array_diff_key($value, array_keys(array_keys($value)))) )
+                {
+                    foreach( $value as $k=>$v)
+                        $tmp_val[$k] = stripslashes($v);
+                    $value = $tmp_val;
+                }
+                else
+                    for($j = 0; $j < sizeof($value); $j++)
+                        $value[$j] = stripslashes($value[$j]);
+            else
+                $value = stripslashes($value);
+        }
+        return $value;
+    }
+    /**
+     * Parses a $format and $date value and return the date formated via $newformat.
+     * If the $newformat is not set return the timestamp. Support only numeric
+     * date format as input, but the $new format can be any valid PHP date format
+     * @param string $format the format of the date to be parsed
+     * @param string $date the value of the data.
+     * @param string $newformat the new format of the $date
+     * @return mixed
+     */
+    public static function parseDate($format, $date, $newformat = '')
+    {
+    	// Flag init
+        $m = 1; $d = 1; $y = 1970; $h = 0; $i = 0; $s = 0;
+
+        $format = trim(strtolower($format));
+        $date = trim($date);
+        $sep = '([\\\/:_;.\s-]{1})';
+
+        $date   = preg_split($sep, $date);
+        $format = preg_split($sep, $format);
+
+        foreach($format as $key => $formatDate) {
+
+		//  only numeric format as source
+			if(isset ($date[$key])) {
+				if(!preg_match('`^([0-9]{1,4})$`', $date[$key])) {
+					return FALSE;
+				}
+				$$formatDate = $date[$key];
+			}
+        }
+        // prepare the time stamp
+        $timestamp = mktime($h, $i, $s, $m, $d, $y);
+        // return the value if @newformat is set
+        if($newformat) return date($newformat, $timestamp);
+        // else return the timestamp.
+        return (integer)$timestamp;
+    }
+	/**
+	 * Return the value from POST or from GET
+	 * @param string $parameter_name
+	 * @param string $default_value
+	 * @return mixed
+	 */
+	public static function GetParam($parameter_name, $default_value = "")
+	{
+		$parameter_value = "";
+		if(isset($_POST[$parameter_name]))
+			$parameter_value = self::Strip($_POST[$parameter_name]);
+		else if(isset($_GET[$parameter_name]))
+		    $parameter_value = self::Strip($_GET[$parameter_name]);
+		else
+			$parameter_value = $default_value;
+		return $parameter_value;
+	}
+	/**
+	 * "Extend" recursively array $a with array $b values (no deletion in $a, just added and updated values)
+	 * @param array $a
+	 * @param array $b
+	 * @return array 
+	 */
+	public static function array_extend($a, $b) {
+		foreach($b as $k=>$v) {
+			if( is_array($v) ) {
+				if( !isset($a[$k]) ) {
+					$a[$k] = $v;
+				} else {
+					$a[$k] = self::array_extend($a[$k], $v);
+				}
+			} else {
+				$a[$k] = $v;
+			}
+		}
+		return $a;
+	}
+}
+
+?>

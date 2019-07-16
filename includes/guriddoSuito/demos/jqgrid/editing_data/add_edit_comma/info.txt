@@ -1,0 +1,1 @@
+In this example the edit numeric field can be set to have "," as decimal separator.

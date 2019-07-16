@@ -1,0 +1,6 @@
+[11-Dec-2014 16:22:48 Europe/Sofia] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[28000] [1045] Access denied for user 'guriddon_tony'@'localhost' (using password: YES)' in /home/guriddon/public_html/demo/jqgridphp/functionality/frozen/grid.php:8
+Stack trace:
+#0 /home/guriddon/public_html/demo/jqgridphp/functionality/frozen/grid.php(8): PDO->__construct('mysql:host=loca...', 'guriddon_tony', 'guri123ddo')
+#1 /home/guriddon/public_html/demo/jqgridphp/functionality/frozen/default.php(32): include('/home/guriddon/...')
+#2 {main}
+  thrown in /home/guriddon/public_html/demo/jqgridphp/functionality/frozen/grid.php on line 8

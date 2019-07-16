@@ -1,0 +1,182 @@
+Executed 2 query(s) - 2013-03-24 07:06:16
+Array
+(
+    [0] => Array
+        (
+            [time] => 2013-03-24 07:06:16
+            [query] => SELECT COUNT(*) AS COUNT  FROM (select distinct itemcode,item,serialno from stkserials where itemcode in ('11R-22,5','275/70-19.5')) gridalias
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2013-03-24 07:06:16
+            [query] => select distinct itemcode,item,serialno from stkserials where itemcode in ('11R-22,5','275/70-19.5') ORDER BY serialno asc LIMIT 0, 7
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2013-03-24 21:51:32
+Array
+(
+    [0] => Array
+        (
+            [time] => 2013-03-24 21:51:32
+            [query] => SELECT COUNT(*) AS COUNT  FROM ztmp24_serialnos
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2013-03-24 21:51:32
+            [query] => select uid,itemcode,item,serialno from ztmp24_serialnos ORDER BY serialno asc LIMIT 0, 7
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2013-03-24 21:53:13
+Array
+(
+    [0] => Array
+        (
+            [time] => 2013-03-24 21:53:13
+            [query] => SELECT COUNT(*) AS COUNT  FROM ztmp24_serialnos
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2013-03-24 21:53:13
+            [query] => select uid,itemcode,item,serialno from ztmp24_serialnos ORDER BY serialno asc LIMIT 0, 7
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2013-03-24 21:54:38
+Array
+(
+    [0] => Array
+        (
+            [time] => 2013-03-24 21:54:38
+            [query] => SELECT COUNT(*) AS COUNT  FROM ztmp24_serialnos
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2013-03-24 21:54:38
+            [query] => select uid,itemcode,item,serialno from ztmp24_serialnos ORDER BY serialno asc LIMIT 0, 7
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2013-03-24 21:55:57
+Array
+(
+    [0] => Array
+        (
+            [time] => 2013-03-24 21:55:57
+            [query] => SELECT COUNT(*) AS COUNT  FROM ztmp24_serialnos
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2013-03-24 21:55:57
+            [query] => select uid,itemcode,item,serialno from ztmp24_serialnos ORDER BY serialno asc LIMIT 0, 7
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2013-03-24 22:00:54
+Array
+(
+    [0] => Array
+        (
+            [time] => 2013-03-24 22:00:54
+            [query] => SELECT COUNT(*) AS COUNT  FROM ztmp24_serialnos
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2013-03-24 22:00:54
+            [query] => select uid,itemcode,item,serialno from ztmp24_serialnos ORDER BY serialno asc LIMIT 0, 7
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2013-04-05 04:23:01
+Array
+(
+    [0] => Array
+        (
+            [time] => 2013-04-05 04:23:01
+            [query] => SELECT COUNT(*) AS COUNT  FROM ztmp24_serialnos
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2013-04-05 04:23:01
+            [query] => select uid,itemcode,item,serialno from ztmp24_serialnos ORDER BY serialno asc LIMIT 0, 7
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)

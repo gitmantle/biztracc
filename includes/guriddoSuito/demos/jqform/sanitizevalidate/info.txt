@@ -1,0 +1,6 @@
+It is possible to validate and sanitize the user input on server at the same time.
+
+Both public properties should be set to true
+
+It is needed to use the setValidation methiod to achieve this goal.
+See the PHP code tab.

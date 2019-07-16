@@ -1,0 +1,25 @@
+<?php
+$usersession = $_COOKIE['usersession'];
+
+$dbs = "ken47109_kenny";
+
+require("../../db.php");
+mysql_select_db($dbs) or die(mysql_error());
+$query = "select * from sessions where session_id = ".$usersession;
+$result = mysql_query($query) or die(mysql_error());
+$row = mysql_fetch_array($result);
+extract($row);
+
+		$thm = $_REQUEST['thm'];
+		$q = 'update staff set theme = "'.$thm.'" where staff_id = '.$user_id;
+		$r = mysql_query($q) or die(mysql_error().$q);
+
+		echo '<script>';
+		echo 'alert("To change the theme of your pages you will need to refresh your browser ");';
+		echo 'this.opener.close();';
+		echo 'this.close();';
+		echo '</script>';
+
+
+?>
+

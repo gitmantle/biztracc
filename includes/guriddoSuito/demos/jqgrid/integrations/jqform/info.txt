@@ -1,0 +1,5 @@
+This example demonstrate how to integrate jqGrid with jqForm.
+The customer form is created with visual jqForm Builder.
+
+Enjoy
+

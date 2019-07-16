@@ -1,0 +1,1 @@
+Automatic grouping is done depending on yDimension data.

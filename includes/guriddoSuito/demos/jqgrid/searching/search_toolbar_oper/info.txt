@@ -1,0 +1,8 @@
+jqGrid support search toolbar mode, where you can have search toolbar on top of each column of the grid. To use, set the <b>toolbarfilter</b> property to true. You can exclude certain columns from appearing in the search options by setting the <b>search</b> property of the respective column to false.
+
+As of version 4.5 we support operations on toolbar search fields. To do this it is needed to set "searchOperators" to true in 
+setFilterOptions method
+
+With the <b>sopt</b> property of each column we can set different operations
+
+When searching is performed the grid triggers Searching / Searched event which you can use to customize this behavior.

@@ -1,0 +1,364 @@
+Executed 2 query(s) - 2019-01-26 21:29:32
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:29:32
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:29:32
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:40:01
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:40:01
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:40:01
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:40:10
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:40:10
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist where account LIKE 'B%'
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:40:10
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist where account LIKE 'B%' ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:40:15
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:40:15
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist where account LIKE 'BI%'
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:40:15
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist where account LIKE 'BI%' ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:40:16
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:40:16
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist where account LIKE 'BIR%'
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:40:16
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist where account LIKE 'BIR%' ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:40:37
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:40:37
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:40:37
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:40:41
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:40:41
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:40:41
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist ORDER BY account asc LIMIT 5, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:40:43
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:40:43
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:40:43
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist ORDER BY account asc LIMIT 10, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:41:47
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:41:47
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:41:47
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:41:53
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:41:53
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist where account LIKE '%B%'
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:41:53
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist where account LIKE '%B%' ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-01-26 21:41:54
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-01-26 21:41:54
+            [query] => SELECT COUNT(*) AS COUNT  FROM infinint_fin44_26.ztmp61_drlist where account LIKE '%BI%'
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-01-26 21:41:54
+            [query] => select uid,account,accountno,sub,client_id,priceband,preferred,blocked from infinint_fin44_26.ztmp61_drlist where account LIKE '%BI%' ORDER BY account asc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-03-16 08:07:47
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-03-16 08:07:47
+            [query] => SELECT COUNT(*) AS COUNT ,SUM(value) AS value,SUM(tax) AS tax,SUM(tot) AS tot FROM infinint_fin40_19.ztmp44_trading
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-03-16 08:07:47
+            [query] => select uid,itemcode,item,currency,price*rate as price,unit,quantity,discount,value*rate as value,tax*rate as tax,tot*rate as tot from infinint_fin40_19.ztmp44_trading ORDER BY uid desc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-03-16 08:41:17
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-03-16 08:41:17
+            [query] => SELECT COUNT(*) AS COUNT ,SUM(value) AS value,SUM(tax) AS tax,SUM(tot) AS tot FROM infinint_fin40_19.ztmp44_trading
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-03-16 08:41:17
+            [query] => select uid,itemcode,item,currency,price*rate as price,unit,quantity,discount,value*rate as value,tax*rate as tax,tot*rate as tot from infinint_fin40_19.ztmp44_trading ORDER BY uid desc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)
+Executed 2 query(s) - 2019-03-16 08:49:07
+Array
+(
+    [0] => Array
+        (
+            [time] => 2019-03-16 08:49:07
+            [query] => SELECT COUNT(*) AS COUNT ,SUM(value) AS value,SUM(tax) AS tax,SUM(tot) AS tot FROM infinint_fin40_19.ztmp44_trading
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+    [1] => Array
+        (
+            [time] => 2019-03-16 08:49:07
+            [query] => select uid,itemcode,item,currency,price*rate as price,unit,quantity,discount,value*rate as value,tax*rate as tax,tot*rate as tot from infinint_fin40_19.ztmp44_trading ORDER BY uid desc LIMIT 0, 5
+            [data] => 
+            [types] => 
+            [fields] => 
+            [primary] => 
+            [input] => 
+        )
+
+)

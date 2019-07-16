@@ -1,0 +1,2 @@
+In a form editiong we can add a custom button with action
+This is done in edit/add options property <b>buttons</b>

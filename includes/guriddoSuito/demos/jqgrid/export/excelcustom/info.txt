@@ -1,0 +1,3 @@
+Exporting to Excel is supported via the <b>excel</b> option in the navigator set to true. Click on the button to see how it works.
+We can export woth custom ExportCommand which can be different from the SelectCommand 
+Try to filter records and then export it - now we export only the filtered records.

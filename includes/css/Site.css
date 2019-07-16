@@ -1,0 +1,176 @@
+﻿/*********************** Body ***********************/
+body 
+{
+    background: #720000;
+    background: radial-gradient(circle at center, #D12F2F 0%, #720000 100%);
+    background: -webkit-radial-gradient(circle, #D12F2F, #720000);
+    background: -o-radial-gradient(circle, #D12F2F, #720000);
+    background: -moz-radial-gradient(circle, #D12F2F, #720000);
+    
+    background-image: url(../images/background.jpg); /*background image*/
+    background-repeat: no-repeat; /*set to repeat pattern or no repeat image*/
+    background-size: cover;
+    -ms-behavior: url(/Scripts/backgroundsize.min.htc); /*IE fixes background-size: cover;*/
+}
+
+/*********************** General ***********************/
+.bg-primary
+{
+    border-radius: 4px;
+    -webkit-box-shadow: 0px 0px 7px 1px #4C4672;
+    -moz-box-shadow:    0px 0px 7px 1px #4C4672;
+    box-shadow:         0px 0px 7px 1px #4C4672;
+}
+
+.maincontent
+{
+    padding: 0px;
+}
+
+.maincontent .panel
+{
+    margin-bottom: 0px;
+}
+
+.img-responsive.logo
+{
+    width: auto \9;
+}
+
+/*********************** Navigation ***********************/
+.navbar 
+{
+    background-color: #616161; /*background of navbar*/
+    border-color: #616161;
+}
+
+.navbar .navbar-nav > li > a, .navbar .navbar-brand 
+{
+    color: #E3E3E3; /*writing on navbar*/
+}
+
+.navbar .navbar-nav > .active > a, .navbar .navbar-nav > .active > a:hover, .navbar .navbar-nav > .active > a:focus, 
+.navbar .navbar-nav > .open > a, .navbar .navbar-nav > .open > a:hover, .navbar .navbar-nav > .open > a:focus, 
+.navbar .navbar-nav .open .dropdown-menu > li > a:hover, .navbar .navbar-nav .open .dropdown-menu > li > a:focus 
+{
+    background-color: rgb(246, 246, 246); 
+    color: black; 
+}
+
+.navbar .navbar-nav > li > a:hover, 
+.navbar .navbar-header .navbar-brand
+{
+    color: #f7f7f7;
+}
+
+.navbar .navbar-nav > li a:hover
+{
+    background-color: rgb(246, 246, 246);/*selected navbar item background*/
+    color: black;/*selected navbar item text*/
+}
+
+@media (max-width: 767px) 
+{
+    .navbar .navbar-nav .open .dropdown-menu > li > a,
+    .navbar .navbar-nav > li > a:focus
+    {
+       color: #F0F0F0; 
+    }
+}
+
+.navigation.top
+{
+    background-color: white;
+}
+
+.logo
+{
+    margin-top: 10px;
+}
+
+/*********************** Footer ***********************/
+.footer
+{
+    background-color: #48494D !important; /*footer background colour*/
+    color: #E7EAF0; /*footer text*/
+    bottom: -20px !important;
+}
+
+.footer .container .row
+{
+    margin-top: 20px;
+    border-radius: 4px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.footer .subfooter .col-lg-6
+{
+    padding: 15px 15px;
+}
+
+.footer a
+{
+    color: #E7EAF0; /*footer Text hover*/
+}
+
+.footer a:hover
+{
+    color: #f3f5f8; 
+}
+
+/*********************** Main Content ***********************/
+.main
+{
+    background-color: Transparent;
+    border-radius: 4px;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/*********************** Menu ***********************/
+a.list-group-item
+{
+    background-color: #f5f5f5;
+    color: #585858;
+    border: 1px solid #E0E0E0;
+}
+
+a.list-group-item:hover
+{
+    background-color: #DADADA;
+    color: #585858;
+}
+
+/*********************** My Account ***********************/
+.account-panel .panel-heading
+{
+    color: #585858;
+}
+
+.account-panel 
+{
+    padding: 0;
+    margin-bottom: 15px;
+}
+
+
+
+/*********************** Panel ***********************/
+.panel-default .panel-heading {
+    background: #63b6db;
+    background: -moz-linear-gradient(top, #E02E2E 0%, #CA1919 100%); /*panel heading background (do all below as well*/
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#E02E2E), color-stop(100%,#CA1919));
+    background: -webkit-linear-gradient(top, #E02E2E 0%, #CA1919 100%);
+    background: -o-linear-gradient(top, #E02E2E 0%, #CA1919 100%);
+    background: -ms-linear-gradient(top, #E02E2E 0%, #CA1919 100%);
+    background: linear-gradient(to bottom, #E02E2E 0%, #CA1919 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#E02E2E', endColorstr='#CA1919',GradientType=0 );
+}
+
+.panel-default 
+{
+    border-color: #AB7979; /*panel border box line*/
+}

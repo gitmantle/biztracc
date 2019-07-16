@@ -1,0 +1,1 @@
+Using the isHasSubGrid event we can dynamically set which row to have subgrid enabled 

@@ -1,0 +1,72 @@
+/*!
+ * Start Bootstrap - Shop Item HTML Template (http://startbootstrap.com)
+ * Code licensed under the Apache License v2.0.
+ * For details, see http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+body {
+    /*padding-top: 70px; /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+}
+
+.thumbnail img {
+    width: 100%;
+}
+
+.ratings {
+    padding-right: 10px;
+    padding-left: 10px;
+    color: #d17581;
+}
+
+.thumbnail {
+    padding: 0;
+}
+
+.thumbnail .caption-full {
+    padding: 9px;
+    color: #333;
+}
+
+footer {
+    margin: 50px 0;
+}
+
+.thintron {
+  padding: 30px 15px;
+  margin-bottom: 20px;
+  color: inherit;
+  background-color: #eee;
+}
+.thintron h1,
+.thintron .h1 {
+  color: inherit;
+}
+.thintron p {
+  margin-bottom: 15px;
+  font-size: 21px;
+  font-weight: 200;
+}
+.thintron > hr {
+  border-top-color: #d5d5d5;
+}
+.container .thintron,
+.container-fluid .thintron {
+  border-radius: 6px;
+}
+.thintron .container {
+  max-width: 100%;
+}
+@media screen and (min-width: 768px) {
+  .thintron {
+    padding: 10px 0;
+  }
+  .container .thintron,
+  .container-fluid .thintron {
+    padding-right: 60px;
+    padding-left: 60px;
+  }
+  .thintron h1,
+  .thintron .h1 {
+    font-size: 63px;
+  }
+}

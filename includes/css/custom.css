@@ -1,0 +1,115 @@
+body 
+{
+    background: url("../../images/back.jpg"); /*background image*/
+	background-repeat: repeat;
+	padding-top: 65px;
+}
+
+.myBackground {
+  background-color: rgba(255,255,255, 0.4);
+  color: inherit;
+}
+
+.row {
+	margin-right: 0px;	
+	margin-left: 0px;	
+}
+
+.navbar 
+{
+    background-color:#333; /*background of navbar*/
+    border-color: #333;
+}
+
+.navbar .navbar-nav > li > a, .navbar .navbar-brand 
+{
+    color: #d4af37; /*writing on navbar*/
+}
+
+.jumbotron {
+  padding-top: 2px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  color: inherit;
+  background-color: #d4af37;
+}
+
+.navbar .navbar-nav > li > a, .navbar .navbar-brand 
+{
+    color: #fcfab2; /*writing on navbar*/
+}
+
+.navbar .navbar-nav > .active > a, .navbar .navbar-nav > .active > a:hover, .navbar .navbar-nav > .active > a:focus, 
+.navbar .navbar-nav > .open > a, .navbar .navbar-nav > .open > a:hover, .navbar .navbar-nav > .open > a:focus, 
+.navbar .navbar-nav .open .dropdown-menu > li > a:hover, .navbar .navbar-nav .open .dropdown-menu > li > a:focus 
+{
+    background-color: rgb(246, 246, 246); 
+    color: black; 
+}
+
+.navbar .navbar-nav > li > a:hover, 
+.navbar .navbar-header .navbar-brand
+{
+    color: white;
+}
+
+.navbar .navbar-nav > li a:hover
+{
+    background-color: rgb(246, 246, 246);/*selected navbar item background*/
+    color: black;/*selected navbar item text*/
+}
+
+img {
+  vertical-align: middle;
+}
+.img-responsive,
+.thumbnail > img,
+.thumbnail a > img,
+.carousel-inner > .item > img,
+.carousel-inner > .item > a > img {
+  display: block;
+  max-width: 100%;
+  height: auto; 
+  border-radius: 15px;
+}
+
+.form-login {
+    background-color: #EDEDED;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 15px;
+    border-color:#d2d2d2;
+    border-width: 5px;
+    box-shadow:0 1px 0 #cfcfcf;
+}
+
+h4 { 
+ border:0 solid #fff; 
+ border-bottom-width:1px;
+ padding-bottom:10px;
+ text-align: center;
+}
+
+.panel-biztracc {
+  border-color: #ddd;
+  border-radius: 15px;
+}
+.panel-biztracc > .panel-heading {
+  color: #333;
+  background-color: #f5f5f5;
+  border-color: #ddd;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+.panel-biztracc > .panel-heading + .panel-collapse > .panel-body {
+  border-top-color: #ddd;
+}
+.panel-biztracc > .panel-heading .badge {
+  color: #f5f5f5;
+  background-color: #333;
+}
+.panel-biztracc > .panel-footer + .panel-collapse > .panel-body {
+  border-bottom-color: #ddd;
+}

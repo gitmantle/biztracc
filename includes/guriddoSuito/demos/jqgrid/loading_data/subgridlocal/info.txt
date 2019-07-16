@@ -1,0 +1,2 @@
+We simulate a subgrid with local data
+Complete hierarchy is achieved in this example with just 1 lines of code - and additinal 1 file for the subgrid

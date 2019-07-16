@@ -1,0 +1,118 @@
+/*
+   Deluxe Menu Data File
+   Created by Deluxe Tuner v3.5
+   http://deluxe-menu.com
+*/
+
+
+// -- Deluxe Tuner Style Names
+var bstylesNames=["Individual Style 1","Individual Style 2","Individual Style 3","Font",];
+// -- End of Deluxe Tuner Style Names
+
+//--- Common
+var bblankImage="tabs/client_tabs.files/blank.gif";
+var bitemCursor="default";
+var bselectedItem=0;
+var bshowOnOver=0;
+
+//--- Dimensions
+var bmenuWidth="500px";
+var bmenuHeight="21px";
+
+//--- Positioning
+var babsolute=0;
+var bleft="120px";
+var btop="120px";
+
+//--- Font
+var bfontStyle=["normal 8pt Tahoma","",""];
+var bfontColor=["#2E2E2E","#2E2E2E","#2E2E2E"];
+var bfontDecoration=["none","none","none"];
+
+//--- Tab-mode
+var tabMode=0;
+var bselectedSmItem=-1;
+var bsmHeight=10;
+var bsmBackColor="#FFFFFF";
+var bsmBorderColor="#91A7B4";
+var bsmBorderWidth=0;
+var bsmBorderStyle="solid";
+var bsmBorderBottomDraw=1;
+var bitemTarget="_blank";
+var bsmItemAlign="center";
+var bsmItemSpacing=1;
+var bsmItemPadding="0px";
+
+//--- Appearance
+var bmenuBackColor="";
+var bmenuBackImage="";
+var bmenuBorderColor="";
+var bmenuBorderWidth=0;
+var bmenuBorderStyle="ridge";
+
+//--- Tabs Appearance
+var bbeforeItemSpace=0;
+var bafterItemSpace=0;
+var bitemBackColor=["#FFFFFF","#FFFFFF","#FFFFFF"];
+var bitemBorderColor=["","",""];
+var bitemBorderWidth=0;
+var bitemBorderStyle=["ridge","ridge","ridge"];
+var bitemAlign="center";
+var bitemSpacing=0;
+var bitemPadding="0px";
+var browSpace=0;
+
+//--- Tabs Images
+var bitemBackImage=["tabs/client_tabs.files/style07_n_back.gif","tabs/client_tabs.files/style07_n_back.gif","tabs/client_tabs.files/style07_s_back.gif"];
+var bbeforeItemImage=["","",""];
+var bafterItemImage=["","",""];
+var bbeforeItemImageW=7;
+var bbeforeItemImageH=21;
+var bafterItemImageW=21;
+var bafterItemImageH=21;
+
+//--- Icons
+var biconWidth=16;
+var biconHeight=16;
+var biconAlign="left";
+
+//--- Separators
+var bseparatorWidth="7px";
+
+//--- Transitional Effects
+var btransition=24;
+var btransOptions="";
+var btransDuration=300;
+
+//--- Floatable Menu
+var bfloatable=1;
+var bfloatIterations=6;
+
+var bstyles = [
+    ["bitemWidth=29px","bitemBackImageSpec=tabs/client_tabs.files/style07_nn_center.gif,tabs/client_tabs.files/style07_nn_center.gif,tabs/client_tabs.files/style07_ns_center.gif,tabs/client_tabs.files/style07_nn_center.gif,tabs/client_tabs.files/style07_ns_center.gif,tabs/client_tabs.files/style07_sn_center.gif,tabs/client_tabs.files/style07_sn_center.gif"],
+    ["bbeforeItemImage=tabs/client_tabs.files/style07_n_left.gif,tabs/client_tabs.files/style07_n_left.gif,tabs/client_tabs.files/style07_s_left.gif"],
+    ["bafterItemImage=tabs/client_tabs.files/style07_n_right.gif,tabs/client_tabs.files/style07_n_right.gif,tabs/client_tabs.files/style07_s_right.gif"],
+    ["bfontColor=#FFFFFF,#FFFFFF,#013572","bfontDecoration=none,underline,none"],
+];
+
+var bmenuItems = [
+    ["Income","javascript:switchDivm('dincome');", "", "", "", "", "1", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+    ["Sundry Income","javascript:switchDivm('dsundry');", "", "", "", "", "", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+    ["Cost of Sales","javascript:switchDivm('dcos');", "", "", "", "", "", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+    ["Expenses","javascript:switchDivm('dexpense');", "", "", "", "", "", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+	["Investment","javascript:switchDivm('dinvestment');", "", "", "", "", "", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+    ["Bank","javascript:switchDivm('dbank');", "", "", "", "", "", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+	["Other Assets","javascript:switchDivm('dassets');", "", "", "", "", "", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+    ["Liabilities","javascript:switchDivm('dliabilities');", "", "", "", "", "", "", "", ],
+    ["-","", "", "", "", "", "0", "", "", ],
+    ["Equity","javascript:switchDivm('dequity');", "", "", "", "", "2", "", "", ],
+];
+
+dtabs_init();

@@ -1,0 +1,74 @@
+Fixes
+=====
+Fix for possible duplicated IDs in the search input boxes
+Removed faulty role="row" on pager
+Removing duplicate code. Moving template in base grid deleting the format function and replace it with template
+Small fixes and support for bootstrap via jQuery UI Bootstrap
+Fix saving the data row in inline edit in case not a reloading is lunched.
+Fix subGridBeforeExpand event should be executed independed of the reloadOnExpand option
+Fixes for pager and toppager
+Fix bug in searching when data is local and the field is defined as formatter data with srcformat and newformat.
+Fixes in clearBeforeUnload. 
+Fix sortTreeGrid in case a local serch is performed.
+Fixed collapsing of expandable row if this row is dragging in sortable table
+Fix for beforeselectrow in inline navigator.
+Fixes in addJSONData, addXmlData in IE when used firstChild
+Fix in showFilter calling parameters
+Fix "multiple:true" might work unexpectedly 
+Fix in case grouping and subgrid to not expand subgrid rows when they are not expanded
+Fix loading the default lang according to the new lang changes
+
+
+Additions and Changes
+=====================
+tabletogrid() function is no more supported.The module is moved into the plugins directory
+Added WCAG AA related ids and headers
+Code optimization in editGridRow
+Introducing templating in Form edit module
+IE versions <= 8 are no more supported.
+Adding scrollPopUp to appear a popup with page information when virtual scrolling is on. Also added top offset to controll the appearing
+Added parameter storeNavOptions to store the nav options in the grid options. The parameter is used in navGrid and if true the options are saved as grid parameters.
+Add a methods saveState which save the  grid state when the option storeNavOptions is set to true in grid option. method uses localStorage
+Add method loadState to restore the previous saved state with saveState.
+Adding UI classes to jQuery UI search dialog. Removing some css rules and adding new for the search filter dialog
+Changes in GridUnload and GridDestroy. In previous case we never can destroy the grid object. The function are called different  way - i.e they are a jgrid namespaced
+Internal module changes and function move.
+inlineNav can be called without to call first navGrid.
+Added second parameter in getGridParam - module to query the certain module parameters.
+Now it is possible to get the parameter of the navigator using jQuery data - ...jqGrid('getGridParam',name,'navGrid');
+Add ignoreCasde default to true. 
+Added searchTree grid when we have a local data.
+Added a option in getFullTreeNode to expand the returned result
+Addeed a option in getRootNodes to return the root nodes of the current grid data.
+Added second param in getRowData - usedata. If set to true the current view is returned from data array (if any) and not from the html table
+TreeGrid now support local data
+Adding support for AMD
+Adding support for AMD in language files.
+Code optimizations in inlineNav when restoreAfterselect is true
+Removing the non utf language files
+Language file structure changes to support more lang at the same time and change it easy
+Added a option cacheUrlData  in colModel editoptions,which caches the data from dataUrl. This very usefull in search fileter and inline edit in order to prevent too much server calls
+Adding missed saving messages in language files
+Drop the LGPL JsonXml.js from jqGrid and replace the code with our own. Created grid.utils.js
+Moving jqGridImport to $.jgrid namespace
+Added method setRegional to change the language on the fly. The method uses sessionStorage
+Add/remove classes ui-sg-collapsed/ui-sg-expanded in  subgrid row to check if it is expanded or collapsed
+Add class widget-content to pager select box
+Add scrollLeftOffset to controll dynamically the appearance of the scroll dialog information
+Changes in CSS to make the grid to look modern
+Added ui.jqgrid-bootstrap.css as a separate css in order to have good grid in boostrap.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

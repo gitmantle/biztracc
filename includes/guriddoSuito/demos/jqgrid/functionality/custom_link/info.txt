@@ -1,0 +1,1 @@
+Custom link example with calling a custom function

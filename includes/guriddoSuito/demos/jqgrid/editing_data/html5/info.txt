@@ -1,0 +1,2 @@
+As of version 5.3 we add support for HTML5 check in formedit.
+See the Phone field

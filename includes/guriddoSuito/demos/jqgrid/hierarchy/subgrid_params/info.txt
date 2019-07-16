@@ -1,0 +1,2 @@
+We can send additional parameters from the selected row.
+This is achieved with the second parameter of setSubGrid method.

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html> 
+<head> 
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8"/> 
+   <title>Google Maps LatLngBounds.extend() Demo</title> 
+   <script src="http://maps.google.com/maps/api/js?sensor=false" 
+           type="text/javascript"></script> 
+</head> 
+<body> 
+   <div id="map" style="width: 400px; height: 300px;"></div> 
+
+   <script type="text/javascript"> 
+
+   var map = new google.maps.Map(document.getElementById('map'), { 
+     mapTypeId: google.maps.MapTypeId.TERRAIN
+   });
+
+   var markerBounds = new google.maps.LatLngBounds();
+
+   var randomPoint, i;
+
+   for (i = 0; i < 10; i++) {
+     // Generate 10 random points within North East USA
+     randomPoint = new google.maps.LatLng( 39.00 + (Math.random() - 0.5) * 20, 
+                                          -77.00 + (Math.random() - 0.5) * 20);
+
+     // Draw a marker for each random point
+     new google.maps.Marker({
+       position: randomPoint, 
+       map: map
+     });
+
+     // Extend markerBounds with each random point.
+     markerBounds.extend(randomPoint);
+   }
+
+   // At the end markerBounds will be the smallest bounding box to contain
+   // our 10 random points
+
+   // Finally we can call the Map.fitBounds() method to set the map to fit
+   // our markerBounds
+   map.fitBounds(markerBounds);
+
+   </script> 
+</body> 
+</html>

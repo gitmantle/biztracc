@@ -1,0 +1,98 @@
+Please read the addition, changes and upgrade notes for JavaScript, which are important for PHP too
+Addition and Changes
+===================
+
+- You will need to upgrade to the latest tcpdf or use the one distributed with the package.
+- You will need to set the path_to_pdf when using  the new version
+
+- Common: the default language file is English. In order to load you desired language 
+  it is needed to set the new variable regional in grid options. Note that with this release it 
+  is possible to have different language files for different grids on the same page. Suppose you want to use 
+  Japan language file - you will need first to load the grid.locale-jp.js and then 
+
+  $grid->setGridOptions(array(
+  ...
+  "regional"=>"jp",
+  ...
+  ));
+- Common: Added autoloader class which automatically load the needed classes when is requiered.
+- Common: Change of directory structure, separate clases in separate files.
+- jqValidator: added a class which performs validation and sanitataion at server
+- jqForm: added ui.jqform.css style  which should be included in the html page 
+- jqForm: added new function addHtmlElement($name,  $content='') to add any html element in the form.
+- jqForm: Added public properties $serverValidate (to enable/disable server validation) and $serverSanitize 
+  to enable/disable server sanitatation). The default values of these is false.
+- jqForm: Added method setValidationRules( $arule ) to set validation on the server. Works only if the  $serverValidate
+  is set to true. The structure of the array is as follow
+$validations = array(
+    'name' => array("number"=>true, "required"=>true, "minValue"=>0, "maxValue"=>3, "sanitize"=>true),
+    'email' => array('email'=>true, "required"=>true),
+    'alias' => array('anything'=>true),
+    'pwd'=>array('anything'=>true),
+)
+
+We suppor following types when validate: 'date' ,'datetime','time', 'alfanum', 'not_empty','words', 'anything', 
+'string','text', 'number', 'float', 'int', 'integer', 'email', 'boolean', 'ip', 'url'
+
+- jqForm : added new function setSanitatationRules( $arule ) to sanitize the user input. Work only if $serverSanitize
+  is set to true. The structure of the array is as follow
+  $sanitize = array('name','email','alias'); Note that the validations array should be set setValidationRules( $arule ) in order this to work.
+  For a easy setup you can set in validation array "sanitize"=>true in order to perform the operation. 
+  You can control booth operations using $serverSanitize and $serverValidate
+  We support following types when sanitize: "url","int","integer","float","number","email","text","string".
+  If the type can not be fount we use the default one - string.
+
+- jqForm: added new function setView( $view = 'horizontal') to set a diffrent view on the form. The possible values of the
+  $view pareameter are: horizontal, vertical, inline, table
+- jqForm added new function setStyling( $style = 'jqueryui') to set a diffrent styling of the form. The default styling is
+  jqueryui. When this is used the jquery ui css file should be included. The other option is 'bootstrap'. If this option
+  is used the bootstrap css file should be included - see the updated demos.
+- jqGrid: all the functions related to export are moved in separate class and file jqGridExport
+- jqGrid: all the functions related to CRUD are moved to separate file and class jqGridEdit
+- jqGrid: all the functions related to jqGrid rendering are moved to separate class and file jqGridrender
+- jqGridExport: Added export to excel with creation of true Excel file. This is achieved with using the 
+  PHP Excel class.
+- jqGridExport: added function setExcelOptions( $exceloptions) to set various Excel options.
+  The default values sre (see the updated demo)
+
+		"file_type"=>"xml", //Excel2007,Excel5,xml
+		"file"=>"", //excel file to be exported
+		"start_cell" => "A1",
+		"creator"=>"jqGrid",
+		"author"=>"jqGrid",
+		"title"=>"jqGrid Excel",
+		"subject"=>"Office 2007 XLSX Document",
+		"description"=>"Document created with Guriddo",
+		"keywords"=>"Guriddo, jqGrid, Excel",
+		"font"=>"Arial",
+		"font_size"=>11,
+		"header_title"=>"",
+		"protect" => false,
+		"password"=>"Guriddo",
+		"path_to_phpexcel_class"=>"External/phpexcel/PHPExcel.php"
+  To use the true export to excel you will need to have the PHP Excel lib installed and point the path to 
+  it using path_to_phpexcel_class of the options. The SuitoPHP package comes standard with this lib.
+- jqGridExport: added public variable $excelFunc. This is Custom function which can be called to modify the grid output
+  before the output to excel. Parameters  passed to this function are the response object and the db connection
+- jqGridExport: added public variable $excelClass.  Custom call can be used again with custom function customFunc. We can call
+  this using static defined functions in class customClass::customFunc - i.e
+  $grid->excelClass = Custom, $grid->excelFunc = myfunc
+  $grid->excelClass = new Custom(), $grid->excelFunc = myfunc
+- jqGridExport: added function getExcelOptions to get the current excel options
+- jqUtil file is renamed to jqGridUtils for correct loading with autoloader
+- jqScheduler: aded public variable $databasepath which point to database.php
+- jqScheduler: it is possible now to define arbitrary fields in the database which is manipulated in scheduler.
+  To do so the keys in dbmap protected array can be modified. The array is present in 
+- jqScheduler: added support for PostgreeSQL and SQL Server databases.
+- jqGrid: added Server validation and sanitatation. The setting of server validation is the same as in the form
+  class. See above the code for jqForm server related validation
+- Database drivers are moved to separate directory.
+- jqVisual Form: added new variable in $DRIVER_PATH in jqformconfig.php which should poin to the database driver
+- jqVisual Form: the FileTree class output only xml files
+
+Fixes
+=====
+- jqGridExport: Fix in export to PDF to be compatible with the last version
+- jqForm: Fix in jqVisual  form builder to to be compatible with the new jqGrid
+- Fixes for jqScheduler demo
+- Fixes in visual form builder

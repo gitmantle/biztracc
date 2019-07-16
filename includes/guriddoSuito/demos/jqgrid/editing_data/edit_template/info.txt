@@ -1,0 +1,7 @@
+One of the ways to edit data is by using the Edit Dialog functionality. You can launch Edit Dialog by selecting a row and then clicking on the "Edit" button in the grid toolbar (bottom left in this example). For this, you need to have navigator enabled.
+
+As of version 4.8 it is possible to customize the form in a way that you want. To place the jqGrid editable fields it is needed to enclose the name form colModel in {}
+
+Also you can add a custom button and attach a code to it when the form is created.
+
+Please, take a look at the code in the PHP tab for additional details. 

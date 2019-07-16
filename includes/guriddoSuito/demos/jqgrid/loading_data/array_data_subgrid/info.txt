@@ -1,0 +1,1 @@
+Subgrid is supported in the array driver like SQL driver - no diffrence
